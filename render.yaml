@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: kimera-live-games-original-preview
+    runtime: node
+    plan: free
+    region: ohio
+    branch: preview/original-version
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
