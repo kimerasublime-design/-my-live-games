@@ -56,7 +56,7 @@
 			engine.handleGift({
 				giftName: gift.name,
 				giftId: laneIndex,
-				giftValue: config.giftTiers[config.giftTiers.length - 1].coins,
+				giftValue: 500,
 				user: { uniqueId: "demo-viewer-" + laneIndex, nickname: "Demo Viewer " + (laneIndex + 1) },
 			});
 			demoGiftIndex++;
