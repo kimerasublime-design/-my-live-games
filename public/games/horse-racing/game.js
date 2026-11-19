@@ -41,37 +41,109 @@
 	// ==========================================
 	// BRIDGE → ENGINE WIRING
 	// ==========================================
-	// Standalone preview mode: simulate gifts locally without connecting to TikTok.
+	// Demo mode offers manual controls so the original game can be
+	// explored without a TikTok Live connection.
 	const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
 	if (demoMode) {
 		const badge = document.createElement("div");
-		badge.textContent = "ORIGINAL VERSION · DEMO";
-		badge.style.cssText = "position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20;padding:8px 14px;border-radius:20px;background:#111;color:#fff;font:600 12px sans-serif;letter-spacing:.08em;border:1px solid rgba(255,255,255,.35)";
+		badge.textContent = "ORIGINAL VERSION · INTERACTIVE DEMO";
+		badge.style.cssText = "position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:30;padding:8px 14px;border-radius:20px;background:#111;color:#fff;font:600 11px sans-serif;letter-spacing:.06em;border:1px solid rgba(255,255,255,.35);pointer-events:none";
 		document.body.appendChild(badge);
-		let demoGiftIndex = 0;
-		const demoTimer = window.setInterval(() => {
-			if (engine.state.phase === "finished") return;
-			const laneIndex = demoGiftIndex % config.lanes.length;
-			const gift = config.giftTiers[config.giftTiers.length - 1].gifts[laneIndex];
+
+		const controls = document.createElement("section");
+		controls.id = "demoControls";
+		controls.innerHTML = `
+			<div class="demo-controls-head">
+				<strong>🎮 DEMO CONTROLS</strong>
+				<span id="demoModeStatus">Manual mode</span>
+			</div>
+			<div class="demo-lane-buttons" id="demoLaneButtons"></div>
+			<div class="demo-action-buttons">
+				<button type="button" id="demoAutoBtn">▶ Auto play</button>
+				<button type="button" id="demoLikeBtn">❤️ Send likes</button>
+				<button type="button" id="demoResetBtn">↻ Restart race</button>
+			</div>
+			<p>Tap a lane to send a gift, or vote using its number.</p>
+		`;
+		document.body.appendChild(controls);
+
+		const laneButtons = controls.querySelector("#demoLaneButtons");
+		config.lanes.forEach((lane, index) => {
+			const button = document.createElement("button");
+			button.type = "button";
+			button.className = "demo-lane-button";
+			button.style.setProperty("--lane-color", lane.color);
+			button.innerHTML = `<span>${lane.flag} ${lane.name}</span><small>🎁 Send gift · 💬 Vote ${index + 1}</small>`;
+			button.addEventListener("click", () => sendDemoGift(index));
+			button.addEventListener("contextmenu", (event) => {
+				event.preventDefault();
+				sendDemoVote(index);
+			});
+			laneButtons.appendChild(button);
+		});
+
+		function demoUser(laneIndex) {
+			return { uniqueId: "preview-viewer-" + laneIndex, nickname: "Preview Viewer " + (laneIndex + 1) };
+		}
+
+		function sendDemoGift(laneIndex) {
+			if (engine.state.phase === "finished" || engine.state.phase === "cooldown") return;
+			const tier = config.giftTiers[config.giftTiers.length - 1];
+			const gift = tier.gifts[laneIndex];
 			engine.handleGift({
 				giftName: gift.name,
 				giftId: laneIndex,
-				giftValue: 500,
-				user: { uniqueId: "demo-viewer-" + laneIndex, nickname: "Demo Viewer " + (laneIndex + 1) },
+				giftValue: tier.coins,
+				user: demoUser(laneIndex),
 			});
-			demoGiftIndex++;
-			if (engine.state.phase === "finished") window.clearInterval(demoTimer);
-		}, 850);
+		}
+
+		function sendDemoVote(laneIndex) {
+			if (engine.state.phase === "finished" || engine.state.phase === "cooldown") return;
+			engine.handleChat({
+				user: demoUser(laneIndex),
+				comment: String(laneIndex + 1),
+			});
+		}
+
+		let autoTimer = null;
+		let autoIndex = 0;
+		const autoButton = controls.querySelector("#demoAutoBtn");
+		const modeStatus = controls.querySelector("#demoModeStatus");
+		autoButton.addEventListener("click", () => {
+			if (autoTimer) {
+				window.clearInterval(autoTimer);
+				autoTimer = null;
+				autoButton.textContent = "▶ Auto play";
+				modeStatus.textContent = "Manual mode";
+				return;
+			}
+			autoTimer = window.setInterval(() => {
+				if (engine.state.phase === "finished" || engine.state.phase === "cooldown") return;
+				sendDemoGift(autoIndex % config.lanes.length);
+				autoIndex++;
+			}, 900);
+			autoButton.textContent = "Ⅱ Pause auto";
+			modeStatus.textContent = "Auto play active";
+		});
+
+		controls.querySelector("#demoLikeBtn").addEventListener("click", () => {
+			engine.handleLike({ user: { uniqueId: "preview-liker", nickname: "Preview Viewer" }, likeCount: 25 });
+		});
+		controls.querySelector("#demoResetBtn").addEventListener("click", () => {
+			if (autoTimer) window.clearInterval(autoTimer);
+			autoTimer = null;
+			autoIndex = 0;
+			autoButton.textContent = "▶ Auto play";
+			modeStatus.textContent = "Manual mode";
+			engine.reset();
+		});
 	} else {
 		TikTokBridge.on("gift", (data) => engine.handleGift(data));
 		TikTokBridge.on("chat", (data) => engine.handleChat(data));
 		TikTokBridge.on("like", (data) => engine.handleLike(data));
 	}
 
-	// Live chat and like events are connected only outside demo mode.
-	/* TikTokBridge handlers are registered above for live mode. */
-	/*
-	*/
 	// ==========================================
 	// BUILD LANE LABELS (with gift legend)
 	// ==========================================
