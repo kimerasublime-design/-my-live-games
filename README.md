@@ -35,7 +35,7 @@ O ciclo da partida inclui espera, contagem regressiva, corrida, resultado e inte
 
 ```bash
 git clone https://github.com/kimerasublime-design/-my-live-games.git
-cd -my-live-games
+cd -- -my-live-games
 npm install
 npm start
 ```
