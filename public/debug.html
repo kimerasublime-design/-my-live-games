@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TikTok Bridge Debugger</title>
+    <title>Kimera Live Games — Depurador de eventos</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/lib/tiktok-bridge.js"></script>
     <style>
@@ -73,12 +73,12 @@
     </style>
   </head>
   <body>
-    <h1>TikTok Bridge Debugger</h1>
+    <h1>Kimera Live Games — Depurador</h1>
     <div style="margin-bottom: 20px">
-      <input type="text" id="username" placeholder="Enter TikTok Username (e.g. jessicabalester)" />
-      <button onclick="start()">Connect</button>
+      <input type="text" id="username" placeholder="Usuário do TikTok (ex.: seu_usuario)" />
+      <button onclick="start()">Conectar</button>
     </div>
-    <div id="stats">Waiting for connection...</div>
+    <div id="stats">Aguardando conexão...</div>
     <div id="log"></div>
 
     <script>
@@ -97,17 +97,17 @@
       }
 
       function updateStats() {
-        statsDiv.textContent = `Chat: ${chatCount} | Gift: ${giftCount} | Like: ${likeCount} | Share: ${shareCount}`;
+        statsDiv.textContent = `Chat: ${chatCount} | Presentes: ${giftCount} | Curtidas: ${likeCount} | Compartilhamentos: ${shareCount}`;
       }
 
       function start() {
         const username = document.getElementById("username").value.trim();
-        if (!username) return alert("Please enter a username");
+        if (!username) return alert("Informe um usuário do TikTok");
 
-        addLog(`Connecting to ${username}...`, "system");
+        addLog(`Conectando a ${username}...`, "system");
         TikTokBridge.connect(username);
 
-        TikTokBridge.on("connected", (data) => addLog(`SUCCESS: Joined room ${data.room}`, "like"));
+        TikTokBridge.on("connected", (data) => addLog(`SUCESSO: conectado à sala ${data.room}`, "like"));
 
         TikTokBridge.on("chat", (data) => {
           chatCount++;
@@ -118,7 +118,7 @@
         TikTokBridge.on("gift", (data) => {
           giftCount++;
           addLog(
-            `🎁 ${data.user.nickname} sent "${data.giftName}" (id:${data.giftId}) x${data.repeatCount} — ${data.giftValue}💎 [${data.giftType}]`,
+            `🎁 ${data.user.nickname} enviou "${data.giftName}" (id:${data.giftId}) x${data.repeatCount} — ${data.giftValue}💎 [${data.giftType}]`,
             "gift",
           );
           updateStats();
@@ -127,7 +127,7 @@
         TikTokBridge.on("like", (data) => {
           likeCount += data.likeCount;
           addLog(
-            `❤️ ${data.user.nickname} liked (+${data.likeCount}, total: ${data.totalLikeCount})`,
+            `❤️ ${data.user.nickname} curtiu (+${data.likeCount}, total: ${data.totalLikeCount})`,
             "like",
           );
           updateStats();
@@ -135,23 +135,23 @@
 
         TikTokBridge.on("share", (data) => {
           shareCount++;
-          addLog(`🔗 ${data.user.nickname} shared the live!`, "share");
+          addLog(`🔗 ${data.user.nickname} compartilhou a live!`, "share");
           updateStats();
         });
 
         TikTokBridge.on("reconnecting", (data) => {
           addLog(
-            `⏳ Reconnecting attempt ${data.attempt} (waiting ${data.delayMs}ms)...`,
+            `⏳ Tentativa de reconexão ${data.attempt} (aguardando ${data.delayMs}ms)...`,
             "reconnecting",
           );
         });
 
         TikTokBridge.on("error", (data) => {
-          addLog(`❌ Error: ${data.message}`, "error");
+          addLog(`❌ Erro: ${data.message}`, "error");
         });
 
         TikTokBridge.on("disconnected", () => {
-          addLog(`⚠️ TikTok Live disconnected`, "error");
+          addLog(`⚠️ TikTok Live desconectado`, "error");
         });
       }
     </script>
