@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		const username = usernameInput.value.trim().toLowerCase();
 
 		if (!username) {
-			showToast("⚠️ Please enter your TikTok username!", "error");
+			showToast("⚠️ Informe seu usuário do TikTok!", "error");
 			usernameInput.focus();
 			return;
 		}
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		// Validate: only allow letters, numbers, underscore, and dots
 		if (!/^[a-z0-9_.]+$/.test(cleanUsername)) {
 			showToast(
-				"⚠️ Username can only contain letters, numbers, _, and .",
+				"⚠️ Use apenas letras, números, ponto e sublinhado no usuário.",
 				"error",
 			);
 			return;
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		// Button feedback
 		generateBtn.textContent = "✅ Link Generated!";
 		setTimeout(() => {
-			generateBtn.textContent = "✨ Generate Game Link";
+			generateBtn.textContent = "✨ Gerar link do jogo";
 		}, 2000);
 
 		console.log(`Generated overlay URL: ${overlayUrl}`);
@@ -114,12 +114,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		try {
 			await navigator.clipboard.writeText(url);
-			showToast("✅ Link copied!", "success");
+			showToast("✅ Link copiado!", "success");
 
 			// Button feedback
 			copyBtn.textContent = "✅ Copied!";
 			setTimeout(() => {
-				copyBtn.textContent = "📋 Copy";
+				copyBtn.textContent = "📋 Copiar link";
 			}, 2000);
 		} catch (err) {
 			// Fallback for older browsers
@@ -147,11 +147,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		// Style based on type
 		if (type === "error") {
-			toast.style.borderColor = "#fe2c55";
-			toast.style.color = "#fe2c55";
+			toast.style.borderColor = "#8b5cf6";
+			toast.style.color = "#8b5cf6";
 		} else {
-			toast.style.borderColor = "#25f4ee";
-			toast.style.color = "#25f4ee";
+			toast.style.borderColor = "#22d3ee";
+			toast.style.color = "#22d3ee";
 		}
 
 		// Show toast
@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	// ==========================================
 	// INITIALIZATION LOG
 	// ==========================================
-	console.log("🎮 TikTok Live Games Dashboard loaded");
+	console.log("🎮 Kimera Live Games — painel carregado");
 	console.log(
 		"Available games:",
 		Array.from(gameCards).map((c) => c.dataset.game),
