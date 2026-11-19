@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
 	const copyBtn = document.getElementById("copyBtn");
 	const toast = document.getElementById("toast");
 	const gameCards = document.querySelectorAll(".game-card[data-game]");
+	const previewFrame = document.getElementById("gamePreviewFrame");
+	const reloadPreviewBtn = document.getElementById("reloadPreviewBtn");
+	const openPreviewBtn = document.getElementById("openPreviewBtn");
+	const previewUrl = "/games/horse-racing/index.html?demo=1";
 
 	// ==========================================
 	// STATE
@@ -43,8 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
 			// Update state
 			selectedGame = card.dataset.game;
 			if (selectedGame === "horse-racing") {
-				window.open("/games/horse-racing/index.html?demo=1", "_blank", "noopener");
-				showToast("Horse Racing preview opened in a new tab!", "success");
+				loadPreview();
+				showToast("Interactive preview loaded below.", "success");
+			} else {
+				showToast("This game is a visual placeholder in the original version.", "error");
 			}
 			gameEntry = card.dataset.entry || "index.html";
 			gameParam = card.dataset.param || "id";
@@ -53,6 +59,21 @@ document.addEventListener("DOMContentLoaded", () => {
 			);
 		});
 	});
+
+	// ==========================================
+	// INTERACTIVE PREVIEW
+	// ==========================================
+	function loadPreview() {
+		previewFrame.src = previewUrl + "&refresh=" + Date.now();
+	}
+
+	reloadPreviewBtn.addEventListener("click", loadPreview);
+	openPreviewBtn.addEventListener("click", () => {
+		window.open(previewUrl, "_blank", "noopener");
+	});
+
+	// Load the original game demo inside the dashboard on startup.
+	loadPreview();
 
 	// ==========================================
 	// GENERATE LINK
