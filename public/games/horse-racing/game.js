@@ -45,6 +45,37 @@
 	TikTokBridge.on("chat", (data) => engine.handleChat(data));
 	TikTokBridge.on("like", (data) => engine.handleLike(data));
 
+	// Modo demonstração: eventos fictícios locais, sem enviar nada ao TikTok.
+	const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
+	if (demoMode) {
+		const demoBadge = document.createElement("div");
+		demoBadge.textContent = "MODO DEMONSTRAÇÃO · EVENTOS SIMULADOS";
+		Object.assign(demoBadge.style, {
+			position: "fixed", top: "16px", right: "16px", zIndex: "1000",
+			padding: "10px 14px", borderRadius: "999px",
+			background: "rgba(139, 92, 246, .92)", color: "#fff",
+			font: "700 12px Inter, sans-serif", letterSpacing: ".06em",
+			boxShadow: "0 6px 24px rgba(139, 92, 246, .35)",
+		});
+		document.body.appendChild(demoBadge);
+
+		const demoUser = { uniqueId: "kimera-demo", nickname: "Torcida Demo" };
+		engine.handleChat({ user: demoUser, comment: "1" });
+		let demoLane = 0;
+		const demoTimer = window.setInterval(() => {
+			if (engine.state.phase === "finished") return;
+			const gift = config.giftTiers[0].gifts[demoLane];
+			engine.handleGift({
+				giftName: gift.name,
+				giftId: demoLane + 1,
+				giftValue: 10000,
+				user: { uniqueId: `kimera-demo-${demoLane}`, nickname: `Torcida ${config.lanes[demoLane].name}` },
+			});
+			demoLane = (demoLane + 1) % config.lanes.length;
+		}, 850);
+		window.addEventListener("beforeunload", () => window.clearInterval(demoTimer), { once: true });
+	}
+
 	// ==========================================
 	// BUILD LANE LABELS (with gift legend)
 	// ==========================================
