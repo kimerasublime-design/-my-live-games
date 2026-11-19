@@ -69,17 +69,21 @@
 
 		const laneButtons = controls.querySelector("#demoLaneButtons");
 		config.lanes.forEach((lane, index) => {
-			const button = document.createElement("button");
-			button.type = "button";
-			button.className = "demo-lane-button";
-			button.style.setProperty("--lane-color", lane.color);
-			button.innerHTML = `<span>${lane.flag} ${lane.name}</span><small>🎁 Send gift · 💬 Vote ${index + 1}</small>`;
-			button.addEventListener("click", () => sendDemoGift(index));
-			button.addEventListener("contextmenu", (event) => {
-				event.preventDefault();
-				sendDemoVote(index);
-			});
-			laneButtons.appendChild(button);
+			const group = document.createElement("div");
+			group.className = "demo-lane-group";
+			const giftButton = document.createElement("button");
+			giftButton.type = "button";
+			giftButton.className = "demo-lane-button";
+			giftButton.style.setProperty("--lane-color", lane.color);
+			giftButton.innerHTML = `<span>${lane.flag} ${lane.name}</span><small>🎁 Send gift</small>`;
+			giftButton.addEventListener("click", () => sendDemoGift(index));
+			const voteButton = document.createElement("button");
+			voteButton.type = "button";
+			voteButton.className = "demo-vote-button";
+			voteButton.textContent = `💬 Vote ${index + 1}`;
+			voteButton.addEventListener("click", () => sendDemoVote(index));
+			group.append(giftButton, voteButton);
+			laneButtons.appendChild(group);
 		});
 
 		function demoUser(laneIndex) {
