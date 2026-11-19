@@ -41,10 +41,37 @@
 	// ==========================================
 	// BRIDGE → ENGINE WIRING
 	// ==========================================
-	TikTokBridge.on("gift", (data) => engine.handleGift(data));
-	TikTokBridge.on("chat", (data) => engine.handleChat(data));
-	TikTokBridge.on("like", (data) => engine.handleLike(data));
+	// Standalone preview mode: simulate gifts locally without connecting to TikTok.
+	const demoMode = new URLSearchParams(window.location.search).get("demo") === "1";
+	if (demoMode) {
+		const badge = document.createElement("div");
+		badge.textContent = "ORIGINAL VERSION · DEMO";
+		badge.style.cssText = "position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20;padding:8px 14px;border-radius:20px;background:#111;color:#fff;font:600 12px sans-serif;letter-spacing:.08em;border:1px solid rgba(255,255,255,.35)";
+		document.body.appendChild(badge);
+		let demoGiftIndex = 0;
+		const demoTimer = window.setInterval(() => {
+			if (engine.state.phase === "finished") return;
+			const laneIndex = demoGiftIndex % config.lanes.length;
+			const gift = config.giftTiers[config.giftTiers.length - 1].gifts[laneIndex];
+			engine.handleGift({
+				giftName: gift.name,
+				giftId: laneIndex,
+				giftValue: config.giftTiers[config.giftTiers.length - 1].coins,
+				user: { uniqueId: "demo-viewer-" + laneIndex, nickname: "Demo Viewer " + (laneIndex + 1) },
+			});
+			demoGiftIndex++;
+			if (engine.state.phase === "finished") window.clearInterval(demoTimer);
+		}, 850);
+	} else {
+		TikTokBridge.on("gift", (data) => engine.handleGift(data));
+		TikTokBridge.on("chat", (data) => engine.handleChat(data));
+		TikTokBridge.on("like", (data) => engine.handleLike(data));
+	}
 
+	// Live chat and like events are connected only outside demo mode.
+	/* TikTokBridge handlers are registered above for live mode. */
+	/*
+	*/
 	// ==========================================
 	// BUILD LANE LABELS (with gift legend)
 	// ==========================================
