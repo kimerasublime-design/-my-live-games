@@ -47,6 +47,12 @@ document.addEventListener("DOMContentLoaded", () => {
 			console.log(
 				`Selected game: ${selectedGame} (${gameEntry}, ${gameParam})`,
 			);
+
+			// A prévia abre em uma aba separada e não depende da conexão com TikTok.
+			if (selectedGame === "horse-racing") {
+				window.open("/games/horse-racing/index.html?demo=1", "_blank", "noopener");
+				showToast("🏇 Prévia da corrida aberta em outra aba!", "success");
+			}
 		});
 	});
 
