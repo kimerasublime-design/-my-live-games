@@ -16,11 +16,11 @@
   --bg-card: rgba(25, 25, 35, 0.8);
   --bg-glass: rgba(255, 255, 255, 0.05);
 
-  /* TikTok-inspired colors */
-  --accent-pink: #fe2c55;
-  --accent-cyan: #25f4ee;
+  /* Kimera brand palette */
+  --accent-pink: #8b5cf6;
+  --accent-cyan: #22d3ee;
   --accent-blue: #3b82f6;
-  --accent-purple: #8b5cf6;
+  --accent-purple: #ec4899;
 
   /* Gradients */
   --gradient-primary: linear-gradient(
@@ -42,7 +42,7 @@
 
   /* Borders */
   --border-color: rgba(255, 255, 255, 0.1);
-  --border-glow: rgba(254, 44, 85, 0.5);
+  --border-glow: rgba(139, 92, 246, 0.5);
 
   /* Spacing */
   --radius-sm: 8px;
@@ -53,7 +53,7 @@
   /* Shadows */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 40px rgba(254, 44, 85, 0.3);
+  --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.3);
 
   /* Transitions */
   --transition-fast: 0.15s ease;
@@ -112,10 +112,10 @@ body {
 @keyframes glow {
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(254, 44, 85, 0.3);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(254, 44, 85, 0.6);
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
   }
 }
 
@@ -244,7 +244,7 @@ body {
 }
 
 .glass-card:hover {
-  border-color: rgba(254, 44, 85, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
   box-shadow: var(--shadow-glow);
 }
 
@@ -276,7 +276,7 @@ body {
 .form-input:focus {
   outline: none;
   border-color: var(--accent-pink);
-  box-shadow: 0 0 0 4px rgba(254, 44, 85, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
 }
 
 .form-input::placeholder {
@@ -309,12 +309,12 @@ body {
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 4px 20px rgba(254, 44, 85, 0.3);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(254, 44, 85, 0.5);
+  box-shadow: 0 6px 30px rgba(139, 92, 246, 0.5);
 }
 
 .btn-primary:active {
@@ -329,7 +329,7 @@ body {
 
 .btn-secondary:hover {
   border-color: var(--accent-cyan);
-  background: rgba(37, 244, 238, 0.1);
+  background: rgba(34, 211, 238, 0.1);
 }
 
 .btn-copy {
@@ -339,7 +339,7 @@ body {
 
 .btn-copy:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(37, 244, 238, 0.5);
+  box-shadow: 0 6px 30px rgba(34, 211, 238, 0.5);
 }
 
 .btn-group {
@@ -383,7 +383,7 @@ body {
 
 .game-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(254, 44, 85, 0.4);
+  border-color: rgba(139, 92, 246, 0.4);
 }
 
 .game-card:hover::before {
@@ -392,7 +392,7 @@ body {
 
 .game-card.selected {
   border-color: var(--accent-pink);
-  box-shadow: 0 0 30px rgba(254, 44, 85, 0.3);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
 }
 
 .game-card.selected::before {
@@ -551,4 +551,59 @@ body {
   .btn {
     width: 100%;
   }
+}
+
+
+/* Kimera dashboard refinements */
+.eyebrow {
+  color: var(--accent-cyan);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  margin-bottom: 14px;
+}
+
+.form-hint {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.game-card.coming-soon {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.game-card.coming-soon:hover {
+  transform: none;
+  border-color: var(--border-color);
+}
+
+.coming-label {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--accent-cyan);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.instructions {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(34, 211, 238, 0.08);
+  border-radius: 12px;
+  border-left: 4px solid var(--accent-cyan);
+}
+
+.instructions strong { color: var(--accent-cyan); }
+.instructions ol {
+  margin: 10px 0 0 20px;
+  color: var(--text-secondary);
+}
+.instructions li { padding: 2px 0; }
+
+@media (max-width: 520px) {
+  .logo { font-size: 1.15rem; }
+  .nav-links { gap: 12px; font-size: 0.85rem; }
 }
