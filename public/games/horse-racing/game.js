@@ -64,7 +64,7 @@
 				`<div class="lane-top">` +
 				`<span class="lane-flag">${lane.flag}</span> ` +
 				`<span class="lane-name">${lane.name}</span> ` +
-				`<span class="lane-vote">Type ${voteNum}</span>` +
+				`<span class="lane-vote">CHAT ${voteNum}</span>` +
 				`<span class="lane-dist">0%</span>` +
 				`</div>` +
 				`<div class="lane-gifts">${giftEmojis}</div>`;
@@ -154,21 +154,8 @@
 			const horseX = trackLeft + barWidth;
 			const horseY = y + laneH / 2;
 
-			// Horse circle (lane color)
-			ctx.beginPath();
-			ctx.arc(horseX, horseY, laneH * 0.3, 0, Math.PI * 2);
-			ctx.fillStyle = lane.color;
-			ctx.fill();
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = 2;
-			ctx.stroke();
-
-			// Country flag emoji on the horse
-			const flagSize = Math.round(laneH * 0.4);
-			ctx.font = `${flagSize}px serif`;
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			ctx.fillText(lane.flag, horseX, horseY);
+			// Personagem Kimera: cavalo estilizado e exclusivo de cada pista.
+			drawHorse(horseX, horseY, lane, laneH);
 		});
 
 		// Finish line
@@ -189,16 +176,140 @@
 	}
 
 	// ==========================================
+	// PERSONAGEM KIMERA — cavalo vetorial em Canvas
+	// Desenhado por código para não depender de imagens externas.
+	// ==========================================
+	function drawHorse(x, y, lane, laneH) {
+		const style = lane.horseStyle || {};
+		const coat = style.coat || lane.color;
+		const mane = style.mane || "#fff";
+		const saddle = style.saddle || "#22D3EE";
+		const marking = style.marking || "#fff";
+		const scale = Math.max(0.72, Math.min(1.35, laneH / 112));
+
+		ctx.save();
+		ctx.translate(x, y);
+		ctx.scale(scale, scale);
+		ctx.lineCap = "round";
+		ctx.lineJoin = "round";
+
+		// Cauda
+		ctx.strokeStyle = mane;
+		ctx.lineWidth = 7;
+		ctx.beginPath();
+		ctx.moveTo(-24, -1);
+		ctx.quadraticCurveTo(-42, -17, -43, 3);
+		ctx.quadraticCurveTo(-44, 13, -34, 12);
+		ctx.stroke();
+
+		// Pernas e cascos
+		ctx.strokeStyle = coat;
+		ctx.lineWidth = 6;
+		[[-17, 11, -20, 25], [-5, 12, -7, 26], [14, 10, 17, 25], [22, 7, 27, 22]].forEach((leg) => {
+			ctx.beginPath();
+			ctx.moveTo(leg[0], leg[1]);
+			ctx.lineTo(leg[2], leg[3]);
+			ctx.stroke();
+			ctx.fillStyle = "#252033";
+			ctx.fillRect(leg[2] - 3, leg[3] - 1, 7, 4);
+		});
+
+		// Corpo
+		ctx.fillStyle = coat;
+		ctx.beginPath();
+		ctx.ellipse(-2, 1, 27, 15, -0.04, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.strokeStyle = "rgba(255,255,255,.55)";
+		ctx.lineWidth = 1.5;
+		ctx.stroke();
+
+		// Pescoço, cabeça e orelhas
+		ctx.beginPath();
+		ctx.moveTo(12, -7);
+		ctx.quadraticCurveTo(19, -19, 23, -27);
+		ctx.lineTo(34, -24);
+		ctx.quadraticCurveTo(37, -17, 31, -12);
+		ctx.lineTo(20, 2);
+		ctx.closePath();
+		ctx.fillStyle = coat;
+		ctx.fill();
+		ctx.beginPath();
+		ctx.ellipse(33, -25, 12, 8, -0.2, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.moveTo(27, -31);
+		ctx.lineTo(25, -42);
+		ctx.lineTo(34, -33);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.moveTo(36, -31);
+		ctx.lineTo(43, -39);
+		ctx.lineTo(42, -27);
+		ctx.fill();
+
+		// Crinas com silhuetas diferentes para cada competidor
+		ctx.fillStyle = mane;
+		ctx.beginPath();
+		if (style.maneType === "flowing") {
+			ctx.moveTo(18, -29);
+			ctx.quadraticCurveTo(4, -37, 9, -47);
+			ctx.quadraticCurveTo(19, -40, 22, -48);
+			ctx.quadraticCurveTo(30, -39, 33, -33);
+		} else if (style.maneType === "flame") {
+			ctx.moveTo(18, -29);
+			ctx.lineTo(11, -44);
+			ctx.lineTo(23, -38);
+			ctx.lineTo(27, -49);
+			ctx.lineTo(34, -33);
+		} else if (style.maneType === "sleek") {
+			ctx.moveTo(18, -29);
+			ctx.quadraticCurveTo(20, -43, 38, -39);
+			ctx.quadraticCurveTo(34, -32, 33, -30);
+		} else {
+			ctx.moveTo(17, -29);
+			ctx.lineTo(13, -44);
+			ctx.lineTo(24, -38);
+			ctx.lineTo(28, -48);
+			ctx.lineTo(34, -32);
+		}
+		ctx.closePath();
+		ctx.fill();
+
+		// Sela, marca facial e detalhes
+		ctx.fillStyle = saddle;
+		ctx.beginPath();
+		ctx.ellipse(-4, -5, 13, 8, -0.12, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.fillStyle = marking;
+		ctx.beginPath();
+		ctx.moveTo(32, -31);
+		ctx.lineTo(35, -25);
+		ctx.lineTo(32, -17);
+		ctx.lineTo(29, -25);
+		ctx.closePath();
+		ctx.fill();
+		ctx.fillStyle = "#171323";
+		ctx.beginPath();
+		ctx.arc(38, -27, 1.8, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.fillStyle = "rgba(255,255,255,.8)";
+		ctx.beginPath();
+		ctx.ellipse(42, -22, 4, 2.5, 0, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.restore();
+	}
+
+	// ==========================================
 	// HUD UPDATE
 	// ==========================================
 	function updateHUD(state) {
 		// Phase text
 		const phaseLabels = {
-			waiting: "🏇 Waiting for gifts to start...",
-			countdown: "⏳ Race starting in...",
-			racing: "🏁 RACE IN PROGRESS!",
-			finished: "🎉 RACE FINISHED!",
-			cooldown: "⏳ Next race soon...",
+			waiting: "🏇 Aguardando a primeira participação...",
+			countdown: "⏳ A corrida começa em...",
+			racing: "🏁 CORRIDA EM ANDAMENTO!",
+			finished: "🎉 CORRIDA FINALIZADA!",
+			cooldown: "⏳ Próxima corrida em instantes...",
 		};
 		phaseText.textContent = phaseLabels[state.phase] || state.phase;
 
@@ -261,7 +372,7 @@
 	function showWinner(winner) {
 		winnerOverlay.classList.remove("hidden");
 		winnerEmoji.textContent = winner.flag;
-		winnerName.textContent = winner.name + " WINS!";
+		winnerName.textContent = winner.name + " VENCEU!";
 		winnerName.style.color = winner.color;
 
 		// Top 3 supporters
@@ -271,7 +382,7 @@
 
 		if (supporters.length > 0) {
 			winnerSupporters.textContent =
-				"Top supporters: " +
+				"Destaques da torcida: " +
 				supporters.map((s) => `${s.nickname} (${s.totalContrib})`).join(", ");
 		} else {
 			winnerSupporters.textContent = "";
@@ -283,6 +394,6 @@
 	// ==========================================
 	requestAnimationFrame(frame);
 	console.log(
-		"[HorseRacing] Game loaded, waiting for TikTokBridge connection...",
+		"[Kimera Live Games] Corrida carregada; aguardando conexão com TikTokBridge.",
 	);
 })();
