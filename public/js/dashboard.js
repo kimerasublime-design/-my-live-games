@@ -42,6 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
 			card.classList.add("selected");
 			// Update state
 			selectedGame = card.dataset.game;
+			if (selectedGame === "horse-racing") {
+				window.open("/games/horse-racing/index.html?demo=1", "_blank", "noopener");
+				showToast("Horse Racing preview opened in a new tab!", "success");
+			}
 			gameEntry = card.dataset.entry || "index.html";
 			gameParam = card.dataset.param || "id";
 			console.log(
