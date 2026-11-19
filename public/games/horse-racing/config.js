@@ -16,15 +16,15 @@
 
 const CONFIG = {
 	// ==========================================
-	// LANES (HORSES = COUNTRY FLAGS)
-	// Top TikTok markets in Asia
+	// COMPETIDORES KIMERA — cada cavalo tem identidade própria.
+	// Os índices continuam alinhados aos presentes de cada faixa.
 	// ==========================================
 	lanes: [
-		{ id: 0, name: "Vietnam", flag: "🇻🇳", color: "#FF4444", aliases: ["vn", "vietnam", "viet nam", "viet"] },
-		{ id: 1, name: "Thailand", flag: "🇹🇭", color: "#4488FF", aliases: ["th", "tl", "thailand", "thai"] },
-		{ id: 2, name: "Indonesia", flag: "🇮🇩", color: "#44DD44", aliases: ["id", "indonesia", "indo"] },
-		{ id: 3, name: "Malaysia", flag: "🇲🇾", color: "#FFCC00", aliases: ["my", "ml", "malaysia", "malay"] },
-		{ id: 4, name: "China", flag: "🇨🇳", color: "#CC44FF", aliases: ["cn", "china", "trung quoc", "trung"] },
+		{ id: 0, name: "Trovão", flag: "⚡", color: "#8B5CF6", aliases: ["trovao", "trovão"], horseStyle: { coat: "#5B3A91", mane: "#D9C5FF", saddle: "#22D3EE", marking: "#F4EFFF", maneType: "spiked" } },
+		{ id: 1, name: "Faísca", flag: "🔥", color: "#F97316", aliases: ["faisca", "faísca", "fogo"], horseStyle: { coat: "#A94E2B", mane: "#FFB347", saddle: "#FDE68A", marking: "#FFF1D6", maneType: "flame" } },
+		{ id: 2, name: "Aurora", flag: "🌟", color: "#EC4899", aliases: ["aurora", "estrela"], horseStyle: { coat: "#C17B91", mane: "#F9C5E2", saddle: "#A5F3FC", marking: "#FFF0F7", maneType: "flowing" } },
+		{ id: 3, name: "Sombra", flag: "🌙", color: "#22D3EE", aliases: ["sombra", "lua"], horseStyle: { coat: "#46536D", mane: "#172033", saddle: "#8B5CF6", marking: "#DCEBFF", maneType: "sleek" } },
+		{ id: 4, name: "Relâmpago", flag: "💨", color: "#A3E635", aliases: ["relampago", "relâmpago", "vento"], horseStyle: { coat: "#B9A36A", mane: "#F7E7A8", saddle: "#F97316", marking: "#FFF8D8", maneType: "spiked" } },
 	],
 
 	// ==========================================
