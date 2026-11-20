@@ -56,7 +56,7 @@ body {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(110deg, rgba(30, 18, 54, 0.94), rgba(8, 24, 38, 0.94));
   backdrop-filter: blur(8px);
   padding: 10px 30px;
   border-radius: 12px;
@@ -66,13 +66,14 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.65);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), 0 0 24px rgba(139, 92, 246, 0.16);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 #phaseTimer {
   font-variant-numeric: tabular-nums;
-  color: #ffd700;
+  color: #22d3ee;
   min-width: 40px;
 }
 
@@ -81,68 +82,43 @@ body {
    ========================================== */
 #laneLabels {
   position: absolute;
-  top: 50%;
-  left: 15px;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  top: 78px;
+  left: 10px;
+  right: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
 }
 
 .lane-label {
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  border-left: 5px solid;
-  white-space: nowrap;
-  min-width: 240px;
+  min-width: 0;
+  padding: 6px 5px;
+  border-radius: 8px;
+  border-left-width: 3px;
+  background: linear-gradient(115deg, rgba(19, 13, 34, .82), rgba(9, 26, 39, .78));
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
+  overflow: hidden;
 }
 
 .lane-label .lane-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
-.lane-label .lane-flag {
-  font-size: 22px;
-}
+.lane-label .lane-flag { font-size: 14px; }
 
-.lane-label .lane-name {
-  font-size: 15px;
-  font-weight: 700;
-}
+.lane-label .lane-name { font-size: 10px; font-weight: 700; }
 
-.lane-label .lane-vote {
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffd700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-}
+.lane-label .lane-vote { font-size: 8px; padding: 1px 3px; }
 
-.lane-label .lane-dist {
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffd700;
-}
+.lane-label .lane-dist { margin-left: 0; font-size: 10px; }
 
-.lane-label .lane-gifts {
-  display: flex;
-  gap: 6px;
-  font-size: 26px;
-  line-height: 1.1;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
-}
+.lane-label .lane-gifts { justify-content: center; gap: 2px; font-size: 12px; line-height: 1; }
 
 /* ==========================================
    EVENT FEED — bottom right
@@ -160,7 +136,7 @@ body {
 }
 
 .feed-item {
-  background: rgba(0, 0, 0, 0.6);
+  background: linear-gradient(100deg, rgba(20, 14, 35, 0.92), rgba(8, 25, 38, 0.88));
   backdrop-filter: blur(4px);
   padding: 6px 12px;
   border-radius: 8px;
@@ -172,16 +148,16 @@ body {
 }
 
 .feed-item.gift {
-  border-left: 3px solid #f4a;
+  border-left: 3px solid #ec4899;
 }
 .feed-item.vote {
-  border-left: 3px solid #ffd700;
+  border-left: 3px solid #22d3ee;
 }
 .feed-item.chat {
-  border-left: 3px solid #4af;
+  border-left: 3px solid #8b5cf6;
 }
 .feed-item.like {
-  border-left: 3px solid #af4;
+  border-left: 3px solid #a3e635;
 }
 
 @keyframes fadeIn {
@@ -207,7 +183,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: radial-gradient(ellipse at center, rgba(37, 18, 66, 0.82), rgba(4, 8, 18, 0.72));
   backdrop-filter: blur(4px);
   animation: fadeIn 0.5s ease;
 }
@@ -229,7 +205,7 @@ body {
 .winner-name {
   font-size: 48px;
   font-weight: 800;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 28px rgba(139, 92, 246, 0.55);
   margin-bottom: 8px;
 }
 
@@ -264,4 +240,31 @@ body {
   50% {
     transform: translateX(-50%) scale(1.05);
   }
+}
+
+
+/* Kimera Live Games — identidade do overlay */
+.phase-banner {
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), 0 0 24px rgba(139, 92, 246, 0.16);
+}
+.lane-label .lane-flag { filter: drop-shadow(0 0 8px rgba(255,255,255,.18)); }
+.lane-label .lane-vote { background: rgba(139, 92, 246, 0.22); color: #d9c5ff; }
+.lane-label .lane-dist { color: #22d3ee; }
+.winner-content {
+  padding: 34px 48px;
+  border: 1px solid rgba(139, 92, 246, 0.72);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(24, 15, 43, .96), rgba(7, 25, 38, .94));
+  box-shadow: 0 22px 80px rgba(0,0,0,.5), 0 0 55px rgba(139, 92, 246, .28);
+}
+.winner-emoji { filter: drop-shadow(0 0 20px rgba(34, 211, 238, .5)); }
+@media (max-width: 900px) {
+  #laneLabels { top: 76px; left: 6px; right: 6px; gap: 3px; }
+  .lane-label { padding: 5px 2px; }
+  .lane-label .lane-gifts { font-size: 10px; }
+  .phase-banner { max-width: calc(100vw - 18px); font-size: 15px; padding: 8px 10px; top: 12px; }
+  #eventFeed { width: min(260px, 52vw); right: 8px; bottom: 8px; }
+  .winner-name { font-size: clamp(28px, 5vw, 48px); }
+  .winner-content { max-width: calc(100vw - 28px); padding: 26px 20px; }
 }

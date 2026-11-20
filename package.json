@@ -1,7 +1,7 @@
 {
-  "name": "tiktok-live-games",
+  "name": "kimera-live-games",
   "version": "1.0.0",
-  "description": "Open-source TikTok Live Game Overlay Platform - Let viewers play games via chat during your livestream",
+  "description": "Plataforma de jogos interativos e overlays para transmissões ao vivo do TikTok",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
@@ -10,19 +10,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/tiktok-live-games.git"
+    "url": "https://github.com/kimerasublime-design/-my-live-games.git"
   },
   "keywords": [
+    "kimera",
     "tiktok",
     "live",
-    "game",
+    "games",
     "overlay",
     "obs",
     "streaming",
     "socket.io",
     "interactive"
   ],
-  "author": "",
+  "author": "Kimera Live Games",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

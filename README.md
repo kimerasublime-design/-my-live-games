@@ -1,291 +1,135 @@
-# TikTok Live Games 🎮
+# Kimera Live Games 🎮
 
-An open-source platform that creates interactive game overlays for TikTok Live streams. Viewers send gifts to power games in real-time — designed for 24/7 streaming with OBS.
+**Uma plataforma de jogos interativos para transmissões ao vivo.**
 
-<img width="2938" height="1654" alt="image" src="https://github.com/user-attachments/assets/7fe6231f-8a9b-450b-8490-b38d775a0645" />
+O Kimera Live Games conecta eventos de uma live do TikTok a jogos exibidos como overlay no OBS ou TikTok Studio. Quem está assistindo pode participar por meio de presentes, curtidas, compartilhamentos e mensagens no chat, conforme as regras de cada jogo.
 
-## Features
+## Recursos atuais
 
-- **Multi-tenant Architecture** — Multiple streamers use the platform simultaneously, fully isolated
-- **TikTok Bridge SDK** — Lightweight client-side library to connect any HTML5 game to TikTok Live
-- **Gift Integration** — Automatic gift categorization (small/medium/large) with `giftId` tracking
-- **Event Normalizer** — Consistent event payloads across all TikTok event types
-- **Auto-Reconnect** — Exponential backoff with jitter (up to 5 retries)
-- **OBS Ready** — Transparent overlays designed for streaming software
-- **Event Debugger** — Real-time event monitor for discovering gift names and testing
+- **Várias transmissões isoladas:** cada streamer utiliza sua própria sala.
+- **Integração com TikTok Live:** conexão por meio do `tiktok-live-connector`.
+- **Bridge para jogos:** biblioteca cliente que encaminha eventos em tempo real.
+- **Eventos normalizados:** formato consistente para chat, presentes, curtidas e compartilhamentos.
+- **Reconexão automática:** tentativas com espera progressiva.
+- **Overlays para OBS:** páginas de jogo com fundo transparente.
+- **Depurador de eventos:** monitoramento para identificar os dados e nomes dos presentes.
 
-## Available Games
+## Jogo disponível
 
-### Horse Racing 🏇
+### 🏇 Corrida de Cavalos
 
-Gift-powered horse race with 5 country lanes. Viewers send gifts to move their country's horse forward.
+Jogo em que os presentes impulsionam os cavalos de diferentes pistas. A configuração de pistas, presentes e valores fica em `public/games/horse-racing/config.js`.
 
-- **5 Lanes**: 🇻🇳 Vietnam, 🇹🇭 Thailand, 🇮🇩 Indonesia, 🇲🇾 Malaysia, 🇨🇳 China
-- **Gift → Lane Mapping**: Each gift name maps to a specific lane (configurable in `config.js`)
-- **4 Gift Tiers**: 1-coin, 5-coin, 10-coin, 99-coin — each tier has 5 gifts (one per lane)
-- **Auto-Reset**: Races cycle automatically (Waiting → Countdown → Racing → Finished → Cooldown)
-- **Supporter Tracking**: Top 3 contributors shown on winner overlay
-- **Canvas 2D + DOM HUD**: Progress bars, event feed, phase banners, winner celebration
+O ciclo da partida inclui espera, contagem regressiva, corrida, resultado e intervalo. O jogo utiliza Canvas 2D e elementos HTML para exibir progresso, eventos e vencedor.
 
-## Quick Start
+> A interface já está sendo adaptada para a identidade Kimera. A personalização das pistas e das regras será feita em uma próxima etapa.
 
-### Prerequisites
+## Como executar localmente
 
-- Node.js 18+
+### Requisitos
+
+- Node.js 18 ou superior
 - npm
 
-### Installation
+### Instalação
 
 ```bash
-git clone https://github.com/vamnguyen/tiktok-live-games.git
-cd tiktok-live-games
+git clone https://github.com/kimerasublime-design/-my-live-games.git
+cd -- -my-live-games
 npm install
 npm start
 ```
 
-### Usage
+Abra o painel em http://localhost:3000.
 
-1. Open the dashboard: http://localhost:3000
-2. Enter the TikTok username of someone currently LIVE
-3. Select **Horse Racing**
-4. Click **Generate Game Link**
-5. Copy the overlay URL
-6. Add as **Browser Source** in OBS/TikTok Studio
-7. Viewers send gifts to race!
+1. Informe o nome de usuário do TikTok que está ao vivo, sem o símbolo `@`.
+2. Selecione um jogo disponível.
+3. Gere o link do overlay.
+4. Adicione o link ao OBS ou TikTok Studio como uma fonte de navegador.
 
-> **Note**: The TikTok username must be currently LIVE for the connection to work.
+O usuário informado precisa estar transmitindo ao vivo para que a conexão seja estabelecida.
 
-### Event Debugger
+## Depurador
 
-Visit http://localhost:3000/debug.html to monitor all TikTok events in real-time. Useful for discovering exact gift names to configure lane mappings.
+Acesse http://localhost:3000/debug.html para acompanhar os eventos recebidos em tempo real e conferir os dados dos presentes.
 
-## Project Structure
+## Estrutura do projeto
 
 ```
-tiktok-live-games/
-├── src/
-│   ├── server.js                        # Express + Socket.io server (port 3000)
-│   ├── services/
-│   │   └── TikTokService.js             # Singleton: TikTok connections, rooms, auto-reconnect
-│   └── lib/
-│       ├── tiktokEventNormalizer.js      # Pure normalization for TikTok events
-│       └── tiktokReconnectPolicy.js      # Exponential backoff reconnect helpers
-├── public/
-│   ├── index.html                        # Dashboard: username → overlay URL generator
-│   ├── debug.html                        # Event debugger: live event monitoring
-│   ├── css/styles.css                    # Dark theme, glass-morphism
-│   ├── js/dashboard.js                   # Game selection & URL generation
-│   ├── lib/tiktok-bridge.js              # Client SDK: Socket.io → game event bridge
-│   └── games/
-│       └── horse-racing/                 # Canvas + DOM horse race game
-│           ├── index.html                # Overlay entry point
-│           ├── game.js                   # Canvas renderer + bridge wiring
-│           ├── race-engine.js            # Pure race state machine
-│           ├── config.js                 # Lanes, gift tiers, gift→lane mapping
-│           └── style.css                 # OBS overlay styles
-└── package.json
+src/
+  server.js
+  services/
+    TikTokService.js
+  lib/
+    tiktokEventNormalizer.js
+    tiktokReconnectPolicy.js
+public/
+  index.html
+  debug.html
+  css/styles.css
+  js/dashboard.js
+  lib/tiktok-bridge.js
+  games/
+    horse-racing/
 ```
 
-## Architecture
-
-### Data Flow
+## Arquitetura
 
 ```
-TikTok Live → tiktok-live-connector → TikTokService → Socket.io rooms → tiktok-bridge.js → Game
+TikTok Live
+  → tiktok-live-connector
+  → TikTokService
+  → salas Socket.io
+  → tiktok-bridge.js
+  → jogo/overlay
 ```
 
-### Multi-tenant Isolation
+Cada streamer recebe uma sala identificada pelo nome de usuário. Os eventos são encaminhados aos clientes conectados à sala correspondente.
 
-Each streamer gets their own Socket.io room (Room ID = TikTok username). Events are routed only to the relevant room — no data leakage between streamers.
+## API
 
-```
-TikTokService (Singleton)
-  ├── connections: Map<username, WebcastConnection>
-  └── rooms: Map<username, clientCount>
-        │
-        ├── io.to("streamer_a").emit() → [Horse Racing Overlay A]
-        ├── io.to("streamer_b").emit() → [Horse Racing Overlay B]
-        └── io.to("streamer_c").emit() → [Horse Racing Overlay C]
-```
+### Endpoints HTTP
 
-### Connection Management
+| Rota | Método | Finalidade |
+| --- | --- | --- |
+| `/api/health` | GET | Estado do servidor |
+| `/api/stats` | GET | Estatísticas das conexões |
 
-- **Singleton Pattern**: Single `TikTokService` instance manages all connections
-- **Connection Reuse**: Existing connections are reused, not recreated
-- **Auto-disconnect**: Connections close after 5 minutes with 0 clients
-- **Auto-reconnect**: Exponential backoff (2s → 4s → 8s → 16s → 32s) with ±30% jitter, max 5 attempts
+### Eventos Socket.io
 
-## API Reference
+**Cliente → servidor:** `join-room`, `leave-room`.
 
-### REST Endpoints
+**Servidor → cliente:** `tiktok_connected`, `tiktok_chat`, `tiktok_gift`, `tiktok_like`, `tiktok_share`, `tiktok_reconnecting`, `tiktok_disconnected` e `tiktok_error`.
 
-| Endpoint      | Method | Description           |
-| ------------- | ------ | --------------------- |
-| `/api/health` | GET    | Server health + stats |
-| `/api/stats`  | GET    | Connection statistics |
+Todos os eventos incluem um registro de tempo. Os dados exatos podem ser inspecionados pelo depurador.
 
-### Socket.io Events
+## Adicionar um jogo
 
-**Client → Server:**
+1. Crie uma pasta em `public/games/NOME-DO-JOGO/`.
+2. Crie o HTML do overlay.
+3. Inclua Socket.io e `/lib/tiktok-bridge.js`.
+4. Escute os eventos necessários com `TikTokBridge.on("gift", callback)`, `TikTokBridge.on("chat", callback)` e outros eventos disponíveis.
+5. Registre o jogo no painel.
 
-| Event        | Payload            | Description            |
-| ------------ | ------------------ | ---------------------- |
-| `join-room`  | `username: string` | Join a streamer's room |
-| `leave-room` | `username: string` | Leave a room           |
-
-**Server → Client (TikTok Events):**
-
-| Event                 | Key Payload Fields                                             | Description              |
-| --------------------- | -------------------------------------------------------------- | ------------------------ |
-| `tiktok_connected`    | `{ roomId }`                                                   | Connected to TikTok Live |
-| `tiktok_chat`         | `{ user, comment }`                                            | Chat message             |
-| `tiktok_gift`         | `{ user, giftId, giftName, giftValue, repeatCount, giftType }` | Gift received            |
-| `tiktok_like`         | `{ user, likeCount, totalLikeCount }`                          | Like/heart               |
-| `tiktok_share`        | `{ user }`                                                     | Share event              |
-| `tiktok_reconnecting` | `{ attempt, delayMs }`                                         | Auto-reconnect attempt   |
-| `tiktok_disconnected` | `{}`                                                           | Disconnected             |
-| `tiktok_error`        | `{ message }`                                                  | Error occurred           |
-
-All events include `timestamp`. The `user` object contains `{ uniqueId, nickname, profilePictureUrl }`.
-
-Gift types: `"small"` (<10 diamonds), `"medium"` (10-99), `"large"` (100+).
-
-## TikTok Bridge SDK
-
-Client-side SDK that handles Socket.io connection and event dispatch for games.
-
-### Auto-Connect
-
-The bridge auto-connects if the URL has `?id=username` or `?username=username` params.
-
-### API
-
-```javascript
-// Manual connect (auto-connect also works via URL params)
-TikTokBridge.connect(username, serverUrl);
-
-// Listen to events
-TikTokBridge.on("gift", (data) => {
-  console.log(data.giftName, data.giftValue, data.giftType);
-});
-
-TikTokBridge.on("chat", (data) => {
-  console.log(data.user.uniqueId, data.comment);
-});
-
-// Available events: chat, gift, like, share, connected, disconnected, reconnecting, error
-```
-
-## Adding a New Game
-
-1. Create `public/games/{name}/` with an entry HTML file
-2. Include the SDK:
-   ```html
-   <script src="/socket.io/socket.io.js"></script>
-   <script src="/lib/tiktok-bridge.js"></script>
-   ```
-3. Listen to events:
-   ```javascript
-   TikTokBridge.on("gift", (data) => {
-     /* move piece, deal damage, etc. */
-   });
-   TikTokBridge.on("chat", (data) => {
-     /* parse commands */
-   });
-   ```
-4. Add a game card in `public/index.html`:
-   ```html
-   <div class="game-card" data-game="your-game" data-entry="index.html" data-param="id">
-     <!-- card content -->
-   </div>
-   ```
-
-## Horse Racing Configuration
-
-### Lane Setup (`config.js`)
-
-```javascript
-lanes: [
-  { id: 0, name: "Vietnam", flag: "🇻🇳", color: "#FF4444" },
-  { id: 1, name: "Thailand", flag: "🇹🇭", color: "#4488FF" },
-  { id: 2, name: "Indonesia", flag: "🇮🇩", color: "#44DD44" },
-  { id: 3, name: "Malaysia", flag: "🇲🇾", color: "#FFCC00" },
-  { id: 4, name: "China", flag: "🇨🇳", color: "#CC44FF" },
-];
-```
-
-### Gift Tiers
-
-Each tier has 5 gifts — one per lane (array index = lane index):
-
-| Tier    | Gifts (VN, TH, ID, MY, CN)                                    |
-| ------- | ------------------------------------------------------------- |
-| 1 coin  | Rose, GG, Ice Cream Cone, Finger Heart, TikTok                |
-| 5 coin  | Hand Heart, Little Crown, Butterfly, Love You, Wishing Bottle |
-| 10 coin | Perfume, Doughnut, Cap, Paper Crane, Sunglasses               |
-| 99 coin | Garland, Singing Mic, Star, Concert, Lock and Key             |
-
-### Gift → Distance Formula
-
-```
-distance = 5 + 3 × √(diamondValue)
-```
-
-| Diamonds | Distance |
-| -------- | -------- |
-| 1        | 8 units  |
-| 10       | 14 units |
-| 99       | 35 units |
-
-### Race Phases
-
-```
-WAITING → COUNTDOWN (10s) → RACING (max 120s) → FINISHED (8s) → COOLDOWN (5s) → WAITING
-```
-
-## Development
+## Desenvolvimento
 
 ```bash
-npm run dev    # Development mode with auto-reload
-npm start      # Production
+npm run dev   # reinicia automaticamente durante o desenvolvimento
+npm start     # inicia o servidor
 ```
 
-### Tech Stack
+## Tecnologias
 
-| Component | Technology                             |
-| --------- | -------------------------------------- |
-| Runtime   | Node.js >= 18 (ES Modules)             |
-| Server    | Express 4.18 + Socket.io 4.7           |
-| TikTok    | tiktok-live-connector 1.1.9            |
-| Games     | Vanilla Canvas 2D + DOM                |
-| Styling   | Custom CSS (dark theme, glassmorphism) |
+- Node.js 18+ e ES Modules
+- Express
+- Socket.io
+- tiktok-live-connector
+- JavaScript, Canvas 2D e CSS
 
-No `.env` required for local development. Server runs on port 3000 by default (`PORT` env var supported).
+A porta padrão é 3000. É possível definir outra porta pela variável de ambiente `PORT`.
 
-## Contributing
+## Sobre o projeto
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-game`
-3. Commit your changes: `git commit -m 'Add amazing game'`
-4. Push to branch: `git push origin feature/amazing-game`
-5. Open a Pull Request
+Kimera Live Games é uma personalização independente baseada no fork deste projeto. A integração com TikTok depende de bibliotecas e serviços de terceiros e pode mudar conforme as plataformas atualizam suas APIs.
 
-### Code Style
-
-- ES Modules (`import`/`export`)
-- Comments in English
-- JSDoc for function documentation
-
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector) — TikTok Live API wrapper
-- [Socket.io](https://socket.io/) — Real-time communication
-- Vietnamese Streamer Community
-
----
-
-**Made with ❤️ for the Global Streamer Community**
+O `package.json` mantém a declaração de licença herdada do projeto-base. Confira os avisos de licença e atribuição do repositório original antes de redistribuir versões.
