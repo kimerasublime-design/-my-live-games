@@ -82,72 +82,43 @@ body {
    ========================================== */
 #laneLabels {
   position: absolute;
-  top: 50%;
-  left: 15px;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  top: 78px;
+  left: 10px;
+  right: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
 }
 
 .lane-label {
-  background: linear-gradient(115deg, rgba(19, 13, 34, 0.94), rgba(9, 26, 39, 0.91));
-  backdrop-filter: blur(6px);
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  border-left: 5px solid;
-  border-top: 1px solid rgba(255,255,255,.12);
-  border-right: 1px solid rgba(255,255,255,.08);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 8px 22px rgba(0,0,0,.24);
-  white-space: nowrap;
-  min-width: 240px;
+  min-width: 0;
+  padding: 6px 5px;
+  border-radius: 8px;
+  border-left-width: 3px;
+  background: linear-gradient(115deg, rgba(19, 13, 34, .82), rgba(9, 26, 39, .78));
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
+  overflow: hidden;
 }
 
 .lane-label .lane-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
-.lane-label .lane-flag {
-  font-size: 22px;
-}
+.lane-label .lane-flag { font-size: 14px; }
 
-.lane-label .lane-name {
-  font-size: 15px;
-  font-weight: 700;
-}
+.lane-label .lane-name { font-size: 10px; font-weight: 700; }
 
-.lane-label .lane-vote {
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.15);
-  color: #22d3ee;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-}
+.lane-label .lane-vote { font-size: 8px; padding: 1px 3px; }
 
-.lane-label .lane-dist {
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-  font-size: 15px;
-  font-weight: 700;
-  color: #22d3ee;
-}
+.lane-label .lane-dist { margin-left: 0; font-size: 10px; }
 
-.lane-label .lane-gifts {
-  display: flex;
-  gap: 6px;
-  font-size: 26px;
-  line-height: 1.1;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
-}
+.lane-label .lane-gifts { justify-content: center; gap: 2px; font-size: 12px; line-height: 1; }
 
 /* ==========================================
    EVENT FEED — bottom right
@@ -289,11 +260,11 @@ body {
 }
 .winner-emoji { filter: drop-shadow(0 0 20px rgba(34, 211, 238, .5)); }
 @media (max-width: 900px) {
-  #laneLabels { left: 8px; }
-  .lane-label { min-width: 205px; padding: 8px 10px; }
-  .lane-label .lane-gifts { font-size: 20px; }
-  .phase-banner { max-width: calc(100vw - 24px); font-size: 17px; padding: 9px 14px; }
-  #eventFeed { width: min(280px, 44vw); right: 10px; bottom: 10px; }
+  #laneLabels { top: 76px; left: 6px; right: 6px; gap: 3px; }
+  .lane-label { padding: 5px 2px; }
+  .lane-label .lane-gifts { font-size: 10px; }
+  .phase-banner { max-width: calc(100vw - 18px); font-size: 15px; padding: 8px 10px; top: 12px; }
+  #eventFeed { width: min(260px, 52vw); right: 8px; bottom: 8px; }
   .winner-name { font-size: clamp(28px, 5vw, 48px); }
   .winner-content { max-width: calc(100vw - 28px); padding: 26px 20px; }
 }
