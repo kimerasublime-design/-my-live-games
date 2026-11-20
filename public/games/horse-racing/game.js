@@ -114,9 +114,9 @@
 	// ==========================================
 	let lastFeedCount = 0;
 
-	function frame() {
+	function frame(timestamp = 0) {
 		const state = engine.tick();
-		drawTrack(state);
+		drawTrack(state, timestamp);
 		updateHUD(state);
 		requestAnimationFrame(frame);
 	}
@@ -124,7 +124,7 @@
 	// ==========================================
 	// CANVAS DRAWING
 	// ==========================================
-	function drawTrack(state) {
+	function drawTrack(state, timestamp = 0) {
 		const W = canvas.width;
 		const H = canvas.height;
 		const laneCount = state.lanes.length;
@@ -186,7 +186,7 @@
 			const horseY = y + laneH / 2;
 
 			// Personagem Kimera: cavalo estilizado e exclusivo de cada pista.
-			drawHorse(horseX, horseY, lane, laneH);
+			drawHorse(horseX, horseY, lane, laneH, timestamp, state.phase);
 		});
 
 		// Finish line
@@ -210,42 +210,62 @@
 	// PERSONAGEM KIMERA — cavalo vetorial em Canvas
 	// Desenhado por código para não depender de imagens externas.
 	// ==========================================
-	function drawHorse(x, y, lane, laneH) {
+	function drawHorse(x, y, lane, laneH, timestamp, phase) {
 		const style = lane.horseStyle || {};
 		const coat = style.coat || lane.color;
 		const mane = style.mane || "#fff";
 		const saddle = style.saddle || "#22D3EE";
 		const marking = style.marking || "#fff";
 		const scale = Math.max(0.72, Math.min(1.35, laneH / 112));
+		const racing = phase === "racing";
+		const frequency = racing ? 0.018 : phase === "countdown" ? 0.008 : 0.003;
+		const gait = timestamp * frequency + lane.id * 0.92;
+		const stride = racing ? 1 : 0.28;
+		const bob = Math.sin(gait * 2) * (racing ? 2.4 : 0.8);
+		const tailSwing = Math.sin(gait * 1.25) * (racing ? 8 : 2.5);
+		const headNod = Math.sin(gait * 2 + 0.7) * (racing ? 2.2 : 0.6);
 
 		ctx.save();
-		ctx.translate(x, y);
+		ctx.translate(x, y + bob);
 		ctx.scale(scale, scale);
 		ctx.lineCap = "round";
 		ctx.lineJoin = "round";
 
-		// Cauda
+		// Cauda articulada: balança conforme o galope.
 		ctx.strokeStyle = mane;
 		ctx.lineWidth = 7;
 		ctx.beginPath();
 		ctx.moveTo(-24, -1);
-		ctx.quadraticCurveTo(-42, -17, -43, 3);
-		ctx.quadraticCurveTo(-44, 13, -34, 12);
+		ctx.quadraticCurveTo(-39, -17 + tailSwing, -43, 3 + tailSwing * 0.45);
+		ctx.quadraticCurveTo(-44, 13 + tailSwing * 0.45, -34, 12);
 		ctx.stroke();
 
-		// Pernas e cascos
-		ctx.strokeStyle = coat;
-		ctx.lineWidth = 6;
-		[[-17, 11, -20, 25], [-5, 12, -7, 26], [14, 10, 17, 25], [22, 7, 27, 22]].forEach((leg) => {
+		// Quatro pernas em ciclos alternados, com joelho e casco.
+		const legs = [
+			{ x: -17, y: 9, phase: 0 },
+			{ x: -5, y: 10, phase: Math.PI },
+			{ x: 14, y: 9, phase: Math.PI },
+			{ x: 22, y: 7, phase: 0 },
+		];
+		legs.forEach((leg, index) => {
+			const swing = Math.sin(gait + leg.phase) * 0.62 * stride;
+			const lift = Math.max(0, Math.cos(gait + leg.phase)) * (racing ? 5 : 1);
+			ctx.save();
+			ctx.translate(leg.x, leg.y);
+			ctx.rotate(swing);
+			ctx.strokeStyle = coat;
+			ctx.lineWidth = 6;
 			ctx.beginPath();
-			ctx.moveTo(leg[0], leg[1]);
-			ctx.lineTo(leg[2], leg[3]);
+			ctx.moveTo(0, 0);
+			ctx.lineTo(index < 2 ? -2 : 3, 10 - lift * 0.35);
+			ctx.lineTo(index < 2 ? -3 : 5, 19 - lift);
 			ctx.stroke();
 			ctx.fillStyle = "#252033";
-			ctx.fillRect(leg[2] - 3, leg[3] - 1, 7, 4);
+			ctx.fillRect((index < 2 ? -3 : 2), 17 - lift, 8, 4);
+			ctx.restore();
 		});
 
-		// Corpo
+		// Corpo e sela acompanham o movimento sem perder a silhueta.
 		ctx.fillStyle = coat;
 		ctx.beginPath();
 		ctx.ellipse(-2, 1, 27, 15, -0.04, 0, Math.PI * 2);
@@ -253,8 +273,14 @@
 		ctx.strokeStyle = "rgba(255,255,255,.55)";
 		ctx.lineWidth = 1.5;
 		ctx.stroke();
+		ctx.fillStyle = saddle;
+		ctx.beginPath();
+		ctx.ellipse(-4, -5, 13, 8, -0.12, 0, Math.PI * 2);
+		ctx.fill();
 
-		// Pescoço, cabeça e orelhas
+		// Pescoço e cabeça com leve movimento de galope.
+		ctx.save();
+		ctx.translate(0, headNod);
 		ctx.beginPath();
 		ctx.moveTo(12, -7);
 		ctx.quadraticCurveTo(19, -19, 23, -27);
@@ -278,39 +304,39 @@
 		ctx.lineTo(42, -27);
 		ctx.fill();
 
-		// Crinas com silhuetas diferentes para cada competidor
+		// Crinas exclusivas com balanço sutil.
+		ctx.save();
+		ctx.translate(0, 0);
+		ctx.rotate(Math.sin(gait * 1.4) * (racing ? 0.09 : 0.025));
 		ctx.fillStyle = mane;
 		ctx.beginPath();
 		if (style.maneType === "flowing") {
 			ctx.moveTo(18, -29);
-			ctx.quadraticCurveTo(4, -37, 9, -47);
+			ctx.quadraticCurveTo(4, -37, 9, -47 + Math.sin(gait) * 2);
 			ctx.quadraticCurveTo(19, -40, 22, -48);
 			ctx.quadraticCurveTo(30, -39, 33, -33);
 		} else if (style.maneType === "flame") {
 			ctx.moveTo(18, -29);
-			ctx.lineTo(11, -44);
+			ctx.lineTo(11, -44 + Math.sin(gait) * 2);
 			ctx.lineTo(23, -38);
 			ctx.lineTo(27, -49);
 			ctx.lineTo(34, -33);
 		} else if (style.maneType === "sleek") {
 			ctx.moveTo(18, -29);
-			ctx.quadraticCurveTo(20, -43, 38, -39);
+			ctx.quadraticCurveTo(20, -43, 38, -39 + Math.sin(gait) * 1.5);
 			ctx.quadraticCurveTo(34, -32, 33, -30);
 		} else {
 			ctx.moveTo(17, -29);
-			ctx.lineTo(13, -44);
+			ctx.lineTo(13, -44 + Math.sin(gait) * 2);
 			ctx.lineTo(24, -38);
 			ctx.lineTo(28, -48);
 			ctx.lineTo(34, -32);
 		}
 		ctx.closePath();
 		ctx.fill();
+		ctx.restore();
 
-		// Sela, marca facial e detalhes
-		ctx.fillStyle = saddle;
-		ctx.beginPath();
-		ctx.ellipse(-4, -5, 13, 8, -0.12, 0, Math.PI * 2);
-		ctx.fill();
+		// Marca facial, olho e focinho.
 		ctx.fillStyle = marking;
 		ctx.beginPath();
 		ctx.moveTo(32, -31);
@@ -328,8 +354,8 @@
 		ctx.ellipse(42, -22, 4, 2.5, 0, 0, Math.PI * 2);
 		ctx.fill();
 		ctx.restore();
+		ctx.restore();
 	}
-
 	// ==========================================
 	// HUD UPDATE
 	// ==========================================
