@@ -1,23 +1,16 @@
 /**
  * game.js
- * Horse Racing — Canvas renderer + TikTokBridge wiring.
- * Reads state from RaceEngine, draws track + horses on Canvas,
- * updates DOM HUD elements (flags, gift legend, event feed).
- *
- * @module games/horse-racing/game
+ * Kimera Live Games — five-lane horse race renderer.
+ * Loads the V4 transparent PNG gallop frames for each horse.
  */
-
 (() => {
-	// ==========================================
-	// SETUP
-	// ==========================================
+	"use strict";
+
 	const config = window.RACE_CONFIG;
 	const engine = new RaceEngine(config);
-
 	const canvas = document.getElementById("raceCanvas");
 	const ctx = canvas.getContext("2d");
 
-	// DOM HUD elements
 	const phaseBanner = document.getElementById("phaseBanner");
 	const phaseText = document.getElementById("phaseText");
 	const phaseTimer = document.getElementById("phaseTimer");
@@ -28,26 +21,39 @@
 	const winnerName = document.getElementById("winnerName");
 	const winnerSupporters = document.getElementById("winnerSupporters");
 
-	// ==========================================
-	// CANVAS SIZING
-	// ==========================================
+	const FRAME_COUNT = 8;
+	const FRAME_DURATION = config.spriteFrameDuration || 110;
+	const spriteSets = new Map();
+
 	function resize() {
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		canvas.width = Math.round(window.innerWidth * dpr);
+		canvas.height = Math.round(window.innerHeight * dpr);
+		canvas.style.width = window.innerWidth + "px";
+		canvas.style.height = window.innerHeight + "px";
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	}
 	window.addEventListener("resize", resize);
 	resize();
 
-	// ==========================================
-	// BRIDGE → ENGINE WIRING
-	// ==========================================
+	function loadHorseSprites() {
+		config.lanes.forEach((lane) => {
+			const frames = [];
+			for (let i = 1; i <= FRAME_COUNT; i++) {
+				const image = new Image();
+				image.decoding = "async";
+				image.src = `assets/horses/${lane.horseId}/frame-${String(i).padStart(2, "0")}.png`;
+				frames.push(image);
+			}
+			spriteSets.set(lane.horseId, frames);
+		});
+	}
+	loadHorseSprites();
+
 	TikTokBridge.on("gift", (data) => engine.handleGift(data));
 	TikTokBridge.on("chat", (data) => engine.handleChat(data));
 	TikTokBridge.on("like", (data) => engine.handleLike(data));
 
-	// ==========================================
-	// BUILD LANE LABELS (with gift legend)
-	// ==========================================
 	function buildLaneLabels() {
 		laneLabelsDiv.innerHTML = "";
 		config.lanes.forEach((lane) => {
@@ -55,88 +61,62 @@
 			el.className = "lane-label";
 			el.id = `lane-label-${lane.id}`;
 			el.style.borderLeftColor = lane.color;
-
-			// Get gift emojis for this lane across all tiers
 			const giftEmojis = config.getLaneGiftEmojis(lane.id).join(" ");
-			const voteNum = lane.id + 1; // 1-indexed for viewers
-
 			el.innerHTML =
 				`<div class="lane-top">` +
-				`<span class="lane-flag">${lane.flag}</span> ` +
-				`<span class="lane-name">${lane.name}</span> ` +
-				`<span class="lane-vote">Type ${voteNum}</span>` +
-				`<span class="lane-dist">0%</span>` +
-				`</div>` +
-				`<div class="lane-gifts">${giftEmojis}</div>`;
+					`<span class="lane-flag" aria-hidden="true">${lane.number}</span>` +
+					`<span class="lane-name">${lane.name}</span>` +
+					`<span class="lane-vote">VOTE ${lane.number}</span>` +
+					`<span class="lane-dist">0%</span>` +
+					`</div>` +
+					`<div class="lane-detail">${lane.detail}</div>` +
+					`<div class="lane-gifts">${giftEmojis}</div>`;
 			laneLabelsDiv.appendChild(el);
 		});
 	}
 	buildLaneLabels();
 
-	// Rebuild lane labels on reset (flags might re-render)
 	engine.on("phaseChange", ({ phase }) => {
 		if (phase === "waiting") buildLaneLabels();
 	});
 
-	// ==========================================
-	// RENDER LOOP
-	// ==========================================
-	let lastFeedCount = 0;
-
-	function frame() {
+	let lastFeedSignature = "";
+	function frame(now) {
 		const state = engine.tick();
-		drawTrack(state);
+		drawTrack(state, now || performance.now());
 		updateHUD(state);
 		requestAnimationFrame(frame);
 	}
 
-	// ==========================================
-	// CANVAS DRAWING
-	// ==========================================
-	function drawTrack(state) {
-		const W = canvas.width;
-		const H = canvas.height;
+	function drawTrack(state, now) {
+		const W = window.innerWidth;
+		const H = window.innerHeight;
 		const laneCount = state.lanes.length;
-
-		// Clear
 		ctx.clearRect(0, 0, W, H);
 
-		// Track dimensions
-		const trackTop = H * 0.15;
-		const trackBottom = H * 0.85;
+		const trackTop = H * 0.14;
+		const trackBottom = H * 0.88;
 		const trackHeight = trackBottom - trackTop;
 		const laneH = trackHeight / laneCount;
-		const trackLeft = 275; // space for wider lane labels with gift icons
-		const trackRight = W - 60; // extra margin for FINISH label
-		const trackWidth = trackRight - trackLeft;
+		const trackLeft = Math.min(300, Math.max(220, W * 0.19));
+		const trackRight = W - 35;
+		const trackWidth = Math.max(80, trackRight - trackLeft);
 
-		// Draw track background
-		ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+		ctx.fillStyle = "rgba(22, 14, 10, 0.48)";
 		ctx.beginPath();
-		ctx.roundRect(
-			trackLeft - 10,
-			trackTop - 10,
-			trackWidth + 20,
-			trackHeight + 20,
-			12,
-		);
+		ctx.roundRect(trackLeft - 8, trackTop - 8, trackWidth + 16, trackHeight + 16, 12);
 		ctx.fill();
 
-		// Draw lanes
 		state.lanes.forEach((lane, i) => {
 			const y = trackTop + i * laneH;
-
-			// Lane stripe (alternating)
 			if (i % 2 === 0) {
-				ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+				ctx.fillStyle = "rgba(255,255,255,0.045)";
 				ctx.fillRect(trackLeft, y, trackWidth, laneH);
 			}
-
-			// Lane divider
 			if (i > 0) {
-				ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+				ctx.strokeStyle = "rgba(255,255,255,0.22)";
 				ctx.lineWidth = 1;
-				ctx.setLineDash([8, 8]);
+				ctx.setLineDash([9, 7]);
 				ctx.beginPath();
 				ctx.moveTo(trackLeft, y);
 				ctx.lineTo(trackRight, y);
@@ -144,35 +124,29 @@
 				ctx.setLineDash([]);
 			}
 
-			// Progress bar
 			const progress = Math.min(lane.distance / config.finishLine, 1);
-			const barWidth = trackWidth * progress;
-			ctx.fillStyle = lane.color + "40"; // semi-transparent
-			ctx.fillRect(trackLeft, y + 4, barWidth, laneH - 8);
+			ctx.fillStyle = lane.color + "45";
+			ctx.fillRect(trackLeft, y + laneH * 0.78, trackWidth * progress, Math.max(3, laneH * 0.055));
 
-			// Horse position
-			const horseX = trackLeft + barWidth;
-			const horseY = y + laneH / 2;
+			const spriteH = Math.min(laneH * 0.91, 142);
+			const spriteW = spriteH * 1.25;
+			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
+			const horseY = y + laneH * 0.47;
+			const frames = spriteSets.get(lane.horseId) || [];
+			const frameIndex = Math.floor(now / FRAME_DURATION) % FRAME_COUNT;
+			const sprite = frames[frameIndex];
 
-			// Horse circle (lane color)
-			ctx.beginPath();
-			ctx.arc(horseX, horseY, laneH * 0.3, 0, Math.PI * 2);
-			ctx.fillStyle = lane.color;
-			ctx.fill();
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = 2;
-			ctx.stroke();
-
-			// Country flag emoji on the horse
-			const flagSize = Math.round(laneH * 0.4);
-			ctx.font = `${flagSize}px serif`;
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			ctx.fillText(lane.flag, horseX, horseY);
+			if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+				ctx.drawImage(sprite, horseX - spriteW / 2, horseY - spriteH / 2, spriteW, spriteH);
+			} else {
+				ctx.font = `bold ${Math.max(34, Math.round(laneH * 0.48))}px serif`;
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillText("🐎", horseX, horseY);
+			}
 		});
 
-		// Finish line
-		ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
+		ctx.strokeStyle = "rgba(255, 215, 0, 0.85)";
 		ctx.lineWidth = 3;
 		ctx.setLineDash([12, 6]);
 		ctx.beginPath();
@@ -180,64 +154,39 @@
 		ctx.lineTo(trackRight, trackBottom + 5);
 		ctx.stroke();
 		ctx.setLineDash([]);
-
-		// Finish label
 		ctx.fillStyle = "#ffd700";
 		ctx.font = "bold 14px sans-serif";
 		ctx.textAlign = "center";
-		ctx.fillText("🏁 FINISH", trackRight, trackTop - 15);
+		ctx.fillText("🏁 CHEGADA", trackRight - 4, trackTop - 14);
 	}
 
-	// ==========================================
-	// HUD UPDATE
-	// ==========================================
 	function updateHUD(state) {
-		// Phase text
 		const phaseLabels = {
-			waiting: "🏇 Waiting for gifts to start...",
-			countdown: "⏳ Race starting in...",
-			racing: "🏁 RACE IN PROGRESS!",
-			finished: "🎉 RACE FINISHED!",
-			cooldown: "⏳ Next race soon...",
+			waiting: "🏇 Aguardando votos e presentes...",
+			countdown: "⏳ Corrida começa em...",
+			racing: "🏁 CORRIDA EM ANDAMENTO!",
+			finished: "🏆 CORRIDA FINALIZADA!",
+			cooldown: "⏳ Próxima corrida em instantes...",
 		};
 		phaseText.textContent = phaseLabels[state.phase] || state.phase;
-
-		// Phase timer
 		const remaining = engine.phaseRemaining();
-		if (remaining !== Infinity && remaining > 0) {
-			phaseTimer.textContent = Math.ceil(remaining / 1000) + "s";
-		} else {
-			phaseTimer.textContent = "";
-		}
+		phaseTimer.textContent = remaining !== Infinity && remaining > 0 ? Math.ceil(remaining / 1000) + "s" : "";
+		phaseBanner.classList.toggle("countdown", state.phase === "countdown");
 
-		// Countdown pulse animation
-		if (state.phase === "countdown") {
-			phaseBanner.classList.add("countdown");
-		} else {
-			phaseBanner.classList.remove("countdown");
-		}
-
-		// Lane labels (progress %)
 		state.lanes.forEach((lane) => {
 			const el = document.getElementById(`lane-label-${lane.id}`);
-			if (el) {
-				const pct = Math.round((lane.distance / config.finishLine) * 100);
-				el.querySelector(".lane-dist").textContent = pct + "%";
-			}
+			if (el) el.querySelector(".lane-dist").textContent =
+				Math.round((lane.distance / config.finishLine) * 100) + "%";
 		});
 
-		// Event feed
-		if (state.recentEvents.length !== lastFeedCount) {
-			lastFeedCount = state.recentEvents.length;
+		const signature = state.recentEvents.map((evt) => evt.timestamp).join(",");
+		if (signature !== lastFeedSignature) {
+			lastFeedSignature = signature;
 			renderFeed(state.recentEvents.slice(0, 8));
 		}
 
-		// Winner overlay
-		if (state.phase === "finished" && state.winner) {
-			showWinner(state.winner);
-		} else {
-			winnerOverlay.classList.add("hidden");
-		}
+		if (state.phase === "finished" && state.winner) showWinner(state.winner);
+		else winnerOverlay.classList.add("hidden");
 	}
 
 	function renderFeed(events) {
@@ -246,9 +195,9 @@
 			const el = document.createElement("div");
 			el.className = "feed-item " + evt.type;
 			if (evt.type === "gift") {
-				el.textContent = `${evt.giftEmoji} ${evt.nickname} → ${evt.laneFlag} (+${evt.distance})`;
+				el.textContent = `${evt.giftEmoji} ${evt.nickname} → ${evt.laneName} (+${evt.distance})`;
 			} else if (evt.type === "vote") {
-				el.textContent = `💬 ${evt.nickname} → ${evt.laneFlag} (+${evt.distance})`;
+				el.textContent = `💬 ${evt.nickname} → ${evt.laneName} (+${evt.distance})`;
 			} else if (evt.type === "chat") {
 				el.textContent = `💬 ${evt.nickname}: ${evt.text}`;
 			} else if (evt.type === "like") {
@@ -260,29 +209,17 @@
 
 	function showWinner(winner) {
 		winnerOverlay.classList.remove("hidden");
-		winnerEmoji.textContent = winner.flag;
-		winnerName.textContent = winner.name + " WINS!";
+		winnerEmoji.textContent = "🏆";
+		winnerName.textContent = winner.name + " VENCEU!";
 		winnerName.style.color = winner.color;
-
-		// Top 3 supporters
 		const supporters = Array.from(winner.supporters.values())
 			.sort((a, b) => b.totalContrib - a.totalContrib)
 			.slice(0, 3);
-
-		if (supporters.length > 0) {
-			winnerSupporters.textContent =
-				"Top supporters: " +
-				supporters.map((s) => `${s.nickname} (${s.totalContrib})`).join(", ");
-		} else {
-			winnerSupporters.textContent = "";
-		}
+		winnerSupporters.textContent = supporters.length
+			? "Maiores apoiadores: " + supporters.map((s) => `${s.nickname} (${s.totalContrib})`).join(", ")
+			: "";
 	}
 
-	// ==========================================
-	// START
-	// ==========================================
 	requestAnimationFrame(frame);
-	console.log(
-		"[HorseRacing] Game loaded, waiting for TikTokBridge connection...",
-	);
+	console.log("[KimeraHorseRacing] Five horse sprite lanes initialized.");
 })();
