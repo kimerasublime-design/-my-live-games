@@ -167,6 +167,8 @@
 				ctx.strokeStyle = "rgba(255, 239, 215, 0.72)";
 				ctx.lineWidth = 2;
 				ctx.setLineDash([12, 9]);
+				// Dashed lane markings stream backward with the dirt surface.
+				ctx.lineDashOffset = -((now * 0.085) % 21);
 				ctx.beginPath();
 				ctx.moveTo(trackLeft + 2, y);
 				ctx.lineTo(trackRight - 2, y);
