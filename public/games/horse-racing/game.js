@@ -44,8 +44,11 @@
 			const frames = [];
 			for (let i = 1; i <= FRAME_COUNT; i++) {
 				const image = new Image();
-				image.decoding = "async";
+				image.decoding = lane.horseId === "horse-02" ? "sync" : "async";
+				if (lane.horseId === "horse-02" && "fetchPriority" in image) image.fetchPriority = "high";
 				image.src = `assets/horses/${lane.horseId}/frame-${String(i).padStart(2, "0")}.png`;
+				// Decode the full gallop set ahead of use to reduce first-loop stutter.
+				if (typeof image.decode === "function") image.decode().catch(() => {});
 				frames.push(image);
 			}
 			spriteSets.set(lane.horseId, frames);
