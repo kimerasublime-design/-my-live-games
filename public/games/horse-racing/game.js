@@ -162,6 +162,28 @@
 			const frameIndex = Math.floor(now / FRAME_DURATION) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
 
+			// Small hoof-level dust plume follows each galloping horse.
+			// The deterministic phase keeps the particles smooth without
+			// creating random flicker or allocating particle objects per frame.
+			const dustPhase = now * 0.006 + i * 1.73;
+			const dustX = horseX - spriteW * 0.30;
+			const dustY = horseY + spriteH * 0.29;
+			ctx.save();
+			for (let p = 0; p < 6; p++) {
+				const phase = dustPhase + p * 1.05;
+				const drift = (p * 13 + (now * 0.025) % 34);
+				const px = dustX - drift;
+				const py = dustY + Math.sin(phase) * (3 + p * 1.2);
+				const radiusX = 3 + (p % 3) * 2;
+				const radiusY = 1.8 + (p % 2) * 1.2;
+				const alpha = 0.12 + (0.12 * (1 + Math.sin(phase)) / 2);
+				ctx.fillStyle = `rgba(245, 207, 163, ${alpha})`;
+				ctx.beginPath();
+				ctx.ellipse(px, py, radiusX, radiusY, -0.12, 0, Math.PI * 2);
+				ctx.fill();
+			}
+			ctx.restore();
+
 			if (sprite && sprite.complete && sprite.naturalWidth > 0) {
 				ctx.save();
 				ctx.shadowColor = "rgba(35, 18, 10, 0.42)";
