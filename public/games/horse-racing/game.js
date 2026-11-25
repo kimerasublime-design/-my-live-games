@@ -104,7 +104,11 @@
 
 		ctx.fillStyle = "rgba(22, 14, 10, 0.48)";
 		ctx.beginPath();
-		ctx.roundRect(trackLeft - 8, trackTop - 8, trackWidth + 16, trackHeight + 16, 12);
+		if (typeof ctx.roundRect === "function") {
+			ctx.roundRect(trackLeft - 8, trackTop - 8, trackWidth + 16, trackHeight + 16, 12);
+		} else {
+			ctx.rect(trackLeft - 8, trackTop - 8, trackWidth + 16, trackHeight + 16);
+		}
 		ctx.fill();
 
 		state.lanes.forEach((lane, i) => {
