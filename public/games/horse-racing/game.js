@@ -94,54 +94,81 @@
 		const laneCount = state.lanes.length;
 		ctx.clearRect(0, 0, W, H);
 
+		// Track surface: opaque dirt with transparent space outside for OBS overlays.
 		const trackTop = H * 0.14;
 		const trackBottom = H * 0.88;
 		const trackHeight = trackBottom - trackTop;
 		const laneH = trackHeight / laneCount;
 		const trackLeft = Math.min(300, Math.max(220, W * 0.19));
-		const trackRight = W - 35;
+		const trackRight = W - 18;
 		const trackWidth = Math.max(80, trackRight - trackLeft);
 
-		ctx.fillStyle = "rgba(22, 14, 10, 0.48)";
+		const dirt = ctx.createLinearGradient(trackLeft, trackTop, trackRight, trackBottom);
+		dirt.addColorStop(0, "#b87543");
+		dirt.addColorStop(0.48, "#99552f");
+		dirt.addColorStop(1, "#774027");
+		ctx.fillStyle = "rgba(24, 17, 13, 0.72)";
 		ctx.beginPath();
-		if (typeof ctx.roundRect === "function") {
-			ctx.roundRect(trackLeft - 8, trackTop - 8, trackWidth + 16, trackHeight + 16, 12);
-		} else {
-			ctx.rect(trackLeft - 8, trackTop - 8, trackWidth + 16, trackHeight + 16);
-		}
+		if (typeof ctx.roundRect === "function") ctx.roundRect(trackLeft - 9, trackTop - 9, trackWidth + 18, trackHeight + 18, 13);
+		else ctx.rect(trackLeft - 9, trackTop - 9, trackWidth + 18, trackHeight + 18);
 		ctx.fill();
+		ctx.fillStyle = dirt;
+		ctx.fillRect(trackLeft, trackTop, trackWidth, trackHeight);
 
+		// Stable dirt grain and hoof-worn streaks (not randomized per frame).
+		for (let i = 0; i < 105; i++) {
+			const px = trackLeft + ((i * 73) % 997) / 997 * trackWidth;
+			const py = trackTop + ((i * 137) % 991) / 991 * trackHeight;
+			ctx.strokeStyle = i % 3 === 0 ? "rgba(255,220,170,0.13)" : "rgba(52,25,13,0.12)";
+			ctx.lineWidth = i % 4 === 0 ? 2 : 1;
+			ctx.beginPath();
+			ctx.moveTo(px, py);
+			ctx.lineTo(px + 5 + (i % 9), py + ((i % 3) - 1));
+			ctx.stroke();
+		}
+
+		// Five clearly separated racing lanes.
 		state.lanes.forEach((lane, i) => {
 			const y = trackTop + i * laneH;
 			if (i % 2 === 0) {
-				ctx.fillStyle = "rgba(255,255,255,0.045)";
+				ctx.fillStyle = "rgba(255, 220, 180, 0.075)";
 				ctx.fillRect(trackLeft, y, trackWidth, laneH);
 			}
 			if (i > 0) {
-				ctx.strokeStyle = "rgba(255,255,255,0.22)";
-				ctx.lineWidth = 1;
-				ctx.setLineDash([9, 7]);
+				ctx.strokeStyle = "rgba(255, 239, 215, 0.62)";
+				ctx.lineWidth = 2;
+				ctx.setLineDash([12, 9]);
 				ctx.beginPath();
-				ctx.moveTo(trackLeft, y);
-				ctx.lineTo(trackRight, y);
+				ctx.moveTo(trackLeft + 2, y);
+				ctx.lineTo(trackRight - 2, y);
 				ctx.stroke();
 				ctx.setLineDash([]);
 			}
 
+			// Lane progress marker.
 			const progress = Math.min(lane.distance / config.finishLine, 1);
-			ctx.fillStyle = lane.color + "45";
-			ctx.fillRect(trackLeft, y + laneH * 0.78, trackWidth * progress, Math.max(3, laneH * 0.055));
+			ctx.fillStyle = "rgba(255, 232, 190, 0.28)";
+			ctx.fillRect(trackLeft + 2, y + laneH * 0.91, trackWidth - 4, Math.max(2, laneH * 0.018));
+			ctx.fillStyle = lane.color + "B0";
+			ctx.fillRect(trackLeft + 2, y + laneH * 0.91, (trackWidth - 4) * progress, Math.max(2, laneH * 0.018));
 
-			const spriteH = Math.min(laneH * 0.91, 142);
+			// Keep the complete 320×256 sprite visible; a slightly larger draw size
+			// makes the horse's four legs and the jockey's lower legs readable on phones.
+			const spriteH = Math.min(laneH * 1.02, 166);
 			const spriteW = spriteH * 1.25;
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
-			const horseY = y + laneH * 0.47;
+			const horseY = y + laneH * 0.48;
 			const frames = spriteSets.get(lane.horseId) || [];
 			const frameIndex = Math.floor(now / FRAME_DURATION) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
 
 			if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+				ctx.save();
+				ctx.shadowColor = "rgba(35, 18, 10, 0.38)";
+				ctx.shadowBlur = 5;
+				ctx.shadowOffsetY = 3;
 				ctx.drawImage(sprite, horseX - spriteW / 2, horseY - spriteH / 2, spriteW, spriteH);
+				ctx.restore();
 			} else {
 				ctx.font = `bold ${Math.max(34, Math.round(laneH * 0.48))}px serif`;
 				ctx.textAlign = "center";
@@ -150,18 +177,37 @@
 			}
 		});
 
-		ctx.strokeStyle = "rgba(255, 215, 0, 0.85)";
-		ctx.lineWidth = 3;
-		ctx.setLineDash([12, 6]);
+		// Inner and outer safety rails.
+		ctx.strokeStyle = "rgba(255, 246, 224, 0.88)";
+		ctx.lineWidth = 4;
 		ctx.beginPath();
-		ctx.moveTo(trackRight, trackTop - 5);
-		ctx.lineTo(trackRight, trackBottom + 5);
+		ctx.moveTo(trackLeft, trackTop);
+		ctx.lineTo(trackRight, trackTop);
+		ctx.moveTo(trackLeft, trackBottom);
+		ctx.lineTo(trackRight, trackBottom);
 		ctx.stroke();
-		ctx.setLineDash([]);
-		ctx.fillStyle = "#ffd700";
-		ctx.font = "bold 14px sans-serif";
-		ctx.textAlign = "center";
-		ctx.fillText("🏁 CHEGADA", trackRight - 4, trackTop - 14);
+		ctx.strokeStyle = "rgba(73, 37, 20, 0.72)";
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(trackLeft, trackTop + 7);
+		ctx.lineTo(trackRight, trackTop + 7);
+		ctx.moveTo(trackLeft, trackBottom - 7);
+		ctx.lineTo(trackRight, trackBottom - 7);
+		ctx.stroke();
+
+		// High-contrast checker finish marker.
+		const checkerSize = Math.max(9, Math.min(16, laneH / 8));
+		for (let row = 0; row < 8; row++) {
+			for (let col = 0; col < 2; col++) {
+				ctx.fillStyle = (row + col) % 2 === 0 ? "#fff" : "#202020";
+				ctx.fillRect(trackRight - checkerSize * 2 + col * checkerSize,
+					trackTop + row * (trackHeight / 8), checkerSize, trackHeight / 8 + 1);
+			}
+		}
+		ctx.fillStyle = "#fff0c9";
+		ctx.font = "bold 12px sans-serif";
+		ctx.textAlign = "right";
+		ctx.fillText("CHEGADA", trackRight - 4, trackTop - 14);
 	}
 
 	function updateHUD(state) {
