@@ -3,7 +3,7 @@
  * Horse Racing game configuration.
  *
  * LANE SYSTEM:
- * - Each lane = a country flag (viewers root for their country).
+ * - Each lane represents one of the five individual horses.
  * - Gifts are mapped to lanes by name, balanced across value tiers.
  * - Overlay shows which gift powers which horse.
  *
@@ -175,7 +175,7 @@ const CONFIG = {
 		if (!this._chatAliasMap) {
 			this._chatAliasMap = {};
 			for (const lane of this.lanes) {
-				// Country name itself
+				// Horse name itself
 				this._chatAliasMap[lane.name.toLowerCase()] = lane.id;
 				// All aliases
 				for (const alias of lane.aliases || []) {
