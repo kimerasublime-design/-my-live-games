@@ -117,20 +117,45 @@
 		ctx.fillStyle = dirt;
 		ctx.fillRect(trackLeft, trackTop, trackWidth, trackHeight);
 
-		// Dirt grain and hoof-worn streaks drift backward to reinforce speed.
-		// The track geometry stays fixed; only the surface texture scrolls.
-		const dirtScroll = (now * 0.035) % trackWidth;
-		for (let i = 0; i < 125; i++) {
-			const baseX = ((i * 73) % 997) / 997 * trackWidth;
-			const px = trackLeft + ((baseX - dirtScroll + trackWidth) % trackWidth);
-			const py = trackTop + ((i * 137) % 991) / 991 * trackHeight;
-			ctx.strokeStyle = i % 3 === 0 ? "rgba(255,220,170,0.16)" : "rgba(52,25,13,0.15)";
-			ctx.lineWidth = i % 4 === 0 ? 2 : 1;
+		// Stronger dirt relief: layered hoof grooves, long motion streaks,
+		// scattered clods and fine grain move at different speeds for depth.
+		ctx.save();
+		ctx.beginPath();
+		ctx.rect(trackLeft, trackTop, trackWidth, trackHeight);
+		ctx.clip();
+		const dirtScroll = (now * 0.072) % (trackWidth + 90);
+		for (let i = 0; i < 34; i++) {
+			const baseX = ((i * 127) % 991) / 991 * (trackWidth + 90);
+			const px = trackLeft + ((baseX - dirtScroll + trackWidth + 90) % (trackWidth + 90)) - 45;
+			const py = trackTop + ((i * 173) % 983) / 983 * trackHeight;
+			const length = 22 + (i % 6) * 13;
+			ctx.strokeStyle = i % 2 === 0 ? "rgba(65, 29, 15, 0.30)" : "rgba(255, 207, 145, 0.25)";
+			ctx.lineWidth = i % 4 === 0 ? 3 : 1.6;
 			ctx.beginPath();
 			ctx.moveTo(px, py);
-			ctx.lineTo(px + 5 + (i % 9), py + ((i % 3) - 1));
+			ctx.quadraticCurveTo(px + length * 0.45, py + ((i % 5) - 2) * 1.8, px + length, py + ((i % 3) - 1) * 2.2);
 			ctx.stroke();
 		}
+		const grainScroll = (now * 0.031) % trackWidth;
+		for (let i = 0; i < 190; i++) {
+			const baseX = ((i * 73) % 997) / 997 * trackWidth;
+			const px = trackLeft + ((baseX - grainScroll + trackWidth) % trackWidth);
+			const py = trackTop + ((i * 137) % 991) / 991 * trackHeight;
+			if (i % 5 === 0) {
+				ctx.fillStyle = "rgba(54, 25, 13, 0.24)";
+				ctx.beginPath();
+				ctx.ellipse(px, py, 2.8 + (i % 4), 1.5 + (i % 3) * 0.45, 0.12, 0, Math.PI * 2);
+				ctx.fill();
+			} else {
+				ctx.strokeStyle = i % 3 === 0 ? "rgba(255, 224, 177, 0.24)" : "rgba(52, 25, 13, 0.22)";
+				ctx.lineWidth = i % 4 === 0 ? 2 : 1;
+				ctx.beginPath();
+				ctx.moveTo(px, py);
+				ctx.lineTo(px + 4 + (i % 12), py + ((i % 5) - 2) * 0.8);
+				ctx.stroke();
+			}
+		}
+		ctx.restore();
 
 		state.lanes.forEach((lane, i) => {
 			const y = trackTop + i * laneH;
