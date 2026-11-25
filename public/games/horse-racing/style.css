@@ -301,12 +301,12 @@ body {
   }
   #laneLabels {
     left: 5px;
-    gap: 5px;
+    gap: 4px;
   }
   .lane-label {
     min-width: 0;
-    width: 166px;
-    padding: 5px 7px;
+    width: 96px;
+    padding: 4px 5px;
     border-left-width: 3px;
     border-radius: 6px;
     gap: 2px;
@@ -321,7 +321,10 @@ body {
     font-size: 13px;
   }
   .lane-label .lane-name {
-    font-size: 10px;
+    font-size: 9px;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .lane-label .lane-vote {
     font-size: 8px;
@@ -330,13 +333,9 @@ body {
   .lane-label .lane-dist {
     font-size: 10px;
   }
-  .lane-label .lane-detail {
-    font-size: 8px;
-  }
+  .lane-label .lane-detail,
   .lane-label .lane-gifts {
-    gap: 3px;
-    font-size: 15px;
-    line-height: 1;
+    display: none;
   }
   #eventFeed {
     right: 6px;
