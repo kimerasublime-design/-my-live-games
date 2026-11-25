@@ -157,7 +157,7 @@
 
 			// Larger proportional rendering: the earlier safety-margin setting
 			// made the horse and jockey too small on phone screens.
-			const spriteH = Math.min(laneH * (isMobile ? 0.97 : 0.96), isMobile ? 154 : 174);
+			const spriteH = Math.min(laneH * (isMobile ? 0.91 : 0.92), isMobile ? 148 : 168);
 			const spriteW = spriteH * 1.25;
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
 			const horseY = y + laneH * 0.49;
