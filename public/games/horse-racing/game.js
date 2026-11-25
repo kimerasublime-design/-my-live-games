@@ -165,6 +165,20 @@
 			const frameIndex = (Math.floor(now / FRAME_DURATION) + frameOffset) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
 
+			// Soft moving contact shadow keeps the horse visually grounded
+			// on the dirt lane without obscuring the legs or hooves.
+			ctx.save();
+			const shadowX = horseX - spriteW * 0.02;
+			const shadowY = horseY + spriteH * 0.405;
+			const shadowGradient = ctx.createRadialGradient(shadowX, shadowY, 2, shadowX, shadowY, spriteW * 0.34);
+			shadowGradient.addColorStop(0, "rgba(28, 16, 10, 0.34)");
+			shadowGradient.addColorStop(1, "rgba(28, 16, 10, 0)");
+			ctx.fillStyle = shadowGradient;
+			ctx.beginPath();
+			ctx.ellipse(shadowX, shadowY, spriteW * 0.34, Math.max(4, laneH * 0.055), 0, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.restore();
+
 			// Small hoof-level dust plume follows each galloping horse.
 			// The deterministic phase keeps the particles smooth without
 			// creating random flicker or allocating particle objects per frame.
