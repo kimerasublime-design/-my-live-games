@@ -159,7 +159,10 @@
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
 			const horseY = y + laneH * 0.49;
 			const frames = spriteSets.get(lane.horseId) || [];
-			const frameIndex = Math.floor(now / FRAME_DURATION) % FRAME_COUNT;
+			// Offset each horse's loop so all five do not gallop in sync.
+			// The source order remains intact; only the starting phase differs.
+			const frameOffset = Math.round(i * FRAME_COUNT / laneCount);
+			const frameIndex = (Math.floor(now / FRAME_DURATION) + frameOffset) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
 
 			// Small hoof-level dust plume follows each galloping horse.
