@@ -68,9 +68,9 @@
 					`<span class="lane-name">${lane.name}</span>` +
 					`<span class="lane-vote">VOTO ${lane.number}</span>` +
 					`<span class="lane-dist">0%</span>` +
-					`</div>` +
-					`<div class="lane-detail">${lane.detail}</div>` +
-					`<div class="lane-gifts">${giftEmojis}</div>`;
+				`</div>` +
+				`<div class="lane-detail">${lane.detail}</div>` +
+				`<div class="lane-gifts">${giftEmojis}</div>`;
 			laneLabelsDiv.appendChild(el);
 		});
 	}
@@ -94,23 +94,22 @@
 		const laneCount = state.lanes.length;
 		ctx.clearRect(0, 0, W, H);
 
-		// Track surface: opaque dirt with transparent space outside for OBS overlays.
-		const trackTop = H * 0.14;
-		const trackBottom = H * 0.88;
+		// Give the racing surface more vertical room so each horse has a
+		// taller lane and the jockey's legs and all four hooves remain readable.
+		const trackTop = H * 0.12;
+		const trackBottom = H * 0.90;
 		const trackHeight = trackBottom - trackTop;
 		const laneH = trackHeight / laneCount;
 		const isMobile = W <= 600;
-		// Reserve a slim column for the lane badges on phones, without letting
-		// the badges cover the horse sprites. Desktop keeps the wider HUD gutter.
-		const trackLeft = isMobile ? Math.min(116, Math.max(104, W * 0.28)) : Math.min(300, Math.max(220, W * 0.19));
-		const trackRight = W - (isMobile ? 10 : 18);
+		const trackLeft = isMobile ? Math.min(108, Math.max(94, W * 0.265)) : Math.min(280, Math.max(210, W * 0.18));
+		const trackRight = W - (isMobile ? 8 : 18);
 		const trackWidth = Math.max(80, trackRight - trackLeft);
 
 		const dirt = ctx.createLinearGradient(trackLeft, trackTop, trackRight, trackBottom);
-		dirt.addColorStop(0, "#b87543");
-		dirt.addColorStop(0.48, "#99552f");
-		dirt.addColorStop(1, "#774027");
-		ctx.fillStyle = "rgba(24, 17, 13, 0.72)";
+		dirt.addColorStop(0, "#c98550");
+		dirt.addColorStop(0.48, "#a65d34");
+		dirt.addColorStop(1, "#824328");
+		ctx.fillStyle = "rgba(24, 17, 13, 0.82)";
 		ctx.beginPath();
 		if (typeof ctx.roundRect === "function") ctx.roundRect(trackLeft - 9, trackTop - 9, trackWidth + 18, trackHeight + 18, 13);
 		else ctx.rect(trackLeft - 9, trackTop - 9, trackWidth + 18, trackHeight + 18);
@@ -118,11 +117,11 @@
 		ctx.fillStyle = dirt;
 		ctx.fillRect(trackLeft, trackTop, trackWidth, trackHeight);
 
-		// Stable dirt grain and hoof-worn streaks (not randomized per frame).
-		for (let i = 0; i < 105; i++) {
+		// Stable dirt grain and hoof-worn streaks.
+		for (let i = 0; i < 125; i++) {
 			const px = trackLeft + ((i * 73) % 997) / 997 * trackWidth;
 			const py = trackTop + ((i * 137) % 991) / 991 * trackHeight;
-			ctx.strokeStyle = i % 3 === 0 ? "rgba(255,220,170,0.13)" : "rgba(52,25,13,0.12)";
+			ctx.strokeStyle = i % 3 === 0 ? "rgba(255,220,170,0.16)" : "rgba(52,25,13,0.15)";
 			ctx.lineWidth = i % 4 === 0 ? 2 : 1;
 			ctx.beginPath();
 			ctx.moveTo(px, py);
@@ -130,15 +129,14 @@
 			ctx.stroke();
 		}
 
-		// Five clearly separated racing lanes.
 		state.lanes.forEach((lane, i) => {
 			const y = trackTop + i * laneH;
 			if (i % 2 === 0) {
-				ctx.fillStyle = "rgba(255, 220, 180, 0.075)";
+				ctx.fillStyle = "rgba(255, 220, 180, 0.085)";
 				ctx.fillRect(trackLeft, y, trackWidth, laneH);
 			}
 			if (i > 0) {
-				ctx.strokeStyle = "rgba(255, 239, 215, 0.62)";
+				ctx.strokeStyle = "rgba(255, 239, 215, 0.72)";
 				ctx.lineWidth = 2;
 				ctx.setLineDash([12, 9]);
 				ctx.beginPath();
@@ -148,31 +146,26 @@
 				ctx.setLineDash([]);
 			}
 
-			// Lane progress marker.
 			const progress = Math.min(lane.distance / config.finishLine, 1);
-			ctx.fillStyle = "rgba(255, 232, 190, 0.28)";
-			ctx.fillRect(trackLeft + 2, y + laneH * 0.91, trackWidth - 4, Math.max(2, laneH * 0.018));
-			ctx.fillStyle = lane.color + "B0";
-			ctx.fillRect(trackLeft + 2, y + laneH * 0.91, (trackWidth - 4) * progress, Math.max(2, laneH * 0.018));
+			ctx.fillStyle = "rgba(255, 232, 190, 0.34)";
+			ctx.fillRect(trackLeft + 2, y + laneH * 0.92, trackWidth - 4, Math.max(3, laneH * 0.022));
+			ctx.fillStyle = lane.color + "D0";
+			ctx.fillRect(trackLeft + 2, y + laneH * 0.92, (trackWidth - 4) * progress, Math.max(3, laneH * 0.022));
 
-			// Keep the complete 320×256 sprite visible; a slightly larger draw size
-			// makes the horse's four legs and the jockey's lower legs readable on phones.
-			// Leave a real vertical safety margin inside each lane. The source
-			// PNGs contain silhouettes close to their 320×256 canvas edges, so
-			// fitting them almost edge-to-edge can make hooves appear clipped
-			// against the lane separators on narrow screens.
-			const spriteH = Math.min(laneH * (isMobile ? 0.80 : 0.88), isMobile ? 124 : 150);
+			// Larger proportional rendering: the earlier safety-margin setting
+			// made the horse and jockey too small on phone screens.
+			const spriteH = Math.min(laneH * (isMobile ? 0.97 : 0.96), isMobile ? 154 : 174);
 			const spriteW = spriteH * 1.25;
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
-			const horseY = y + laneH * 0.48;
+			const horseY = y + laneH * 0.49;
 			const frames = spriteSets.get(lane.horseId) || [];
 			const frameIndex = Math.floor(now / FRAME_DURATION) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
 
 			if (sprite && sprite.complete && sprite.naturalWidth > 0) {
 				ctx.save();
-				ctx.shadowColor = "rgba(35, 18, 10, 0.38)";
-				ctx.shadowBlur = 5;
+				ctx.shadowColor = "rgba(35, 18, 10, 0.42)";
+				ctx.shadowBlur = 6;
 				ctx.shadowOffsetY = 3;
 				ctx.drawImage(sprite, horseX - spriteW / 2, horseY - spriteH / 2, spriteW, spriteH);
 				ctx.restore();
@@ -185,7 +178,7 @@
 		});
 
 		// Inner and outer safety rails.
-		ctx.strokeStyle = "rgba(255, 246, 224, 0.88)";
+		ctx.strokeStyle = "rgba(255, 246, 224, 0.92)";
 		ctx.lineWidth = 4;
 		ctx.beginPath();
 		ctx.moveTo(trackLeft, trackTop);
@@ -193,7 +186,7 @@
 		ctx.moveTo(trackLeft, trackBottom);
 		ctx.lineTo(trackRight, trackBottom);
 		ctx.stroke();
-		ctx.strokeStyle = "rgba(73, 37, 20, 0.72)";
+		ctx.strokeStyle = "rgba(73, 37, 20, 0.78)";
 		ctx.lineWidth = 2;
 		ctx.beginPath();
 		ctx.moveTo(trackLeft, trackTop + 7);
@@ -202,7 +195,6 @@
 		ctx.lineTo(trackRight, trackBottom - 7);
 		ctx.stroke();
 
-		// High-contrast checker finish marker.
 		const checkerSize = Math.max(9, Math.min(16, laneH / 8));
 		for (let row = 0; row < 8; row++) {
 			for (let col = 0; col < 2; col++) {
