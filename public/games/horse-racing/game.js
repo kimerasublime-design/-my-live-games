@@ -66,7 +66,7 @@
 				`<div class="lane-top">` +
 					`<span class="lane-flag" aria-hidden="true">${lane.number}</span>` +
 					`<span class="lane-name">${lane.name}</span>` +
-					`<span class="lane-vote">VOTE ${lane.number}</span>` +
+					`<span class="lane-vote">VOTO ${lane.number}</span>` +
 					`<span class="lane-dist">0%</span>` +
 					`</div>` +
 					`<div class="lane-detail">${lane.detail}</div>` +
