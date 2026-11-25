@@ -117,9 +117,12 @@
 		ctx.fillStyle = dirt;
 		ctx.fillRect(trackLeft, trackTop, trackWidth, trackHeight);
 
-		// Stable dirt grain and hoof-worn streaks.
+		// Dirt grain and hoof-worn streaks drift backward to reinforce speed.
+		// The track geometry stays fixed; only the surface texture scrolls.
+		const dirtScroll = (now * 0.035) % trackWidth;
 		for (let i = 0; i < 125; i++) {
-			const px = trackLeft + ((i * 73) % 997) / 997 * trackWidth;
+			const baseX = ((i * 73) % 997) / 997 * trackWidth;
+			const px = trackLeft + ((baseX - dirtScroll + trackWidth) % trackWidth);
 			const py = trackTop + ((i * 137) % 991) / 991 * trackHeight;
 			ctx.strokeStyle = i % 3 === 0 ? "rgba(255,220,170,0.16)" : "rgba(52,25,13,0.15)";
 			ctx.lineWidth = i % 4 === 0 ? 2 : 1;
