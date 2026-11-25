@@ -10,6 +10,9 @@
 	const engine = new RaceEngine(config);
 	const canvas = document.getElementById("raceCanvas");
 	const ctx = canvas.getContext("2d");
+	// Keep scaled transparent horse sprites smooth on high-DPI and mobile screens.
+	ctx.imageSmoothingEnabled = true;
+	if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
 
 	const phaseBanner = document.getElementById("phaseBanner");
 	const phaseText = document.getElementById("phaseText");
