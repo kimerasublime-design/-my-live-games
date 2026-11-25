@@ -192,17 +192,20 @@
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
 			const horseY = y + laneH * 0.49;
 			const frames = spriteSets.get(lane.horseId) || [];
-			// Offset each horse's loop so all five do not gallop in sync.
-			// The source order remains intact; only the starting phase differs.
+			// Horse 2 uses a slightly longer, individually phased cycle so the
+			// foreleg/hind-leg transitions read clearly instead of flickering.
+			const isHorseTwo = lane.horseId === "horse-02";
+			const horseFrameDuration = isHorseTwo ? 108 : FRAME_DURATION;
 			const frameOffset = Math.round(i * FRAME_COUNT / laneCount);
-			const frameIndex = (Math.floor(now / FRAME_DURATION) + frameOffset) % FRAME_COUNT;
+			const frameIndex = (Math.floor(now / horseFrameDuration) + frameOffset) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
+			const horseBob = isHorseTwo ? Math.sin((now / horseFrameDuration) * Math.PI / 2) * 1.6 : 0;
 
 			// Soft moving contact shadow keeps the horse visually grounded
 			// on the dirt lane without obscuring the legs or hooves.
 			ctx.save();
 			const shadowX = horseX - spriteW * 0.02;
-			const shadowY = horseY + spriteH * 0.405;
+			const shadowY = horseY + spriteH * 0.405 + horseBob * 0.35;
 			const shadowGradient = ctx.createRadialGradient(shadowX, shadowY, 2, shadowX, shadowY, spriteW * 0.34);
 			shadowGradient.addColorStop(0, "rgba(28, 16, 10, 0.34)");
 			shadowGradient.addColorStop(1, "rgba(28, 16, 10, 0)");
@@ -239,7 +242,7 @@
 				ctx.shadowColor = "rgba(35, 18, 10, 0.42)";
 				ctx.shadowBlur = 6;
 				ctx.shadowOffsetY = 3;
-				ctx.drawImage(sprite, horseX - spriteW / 2, horseY - spriteH / 2, spriteW, spriteH);
+				ctx.drawImage(sprite, horseX - spriteW / 2, horseY - spriteH / 2 + horseBob, spriteW, spriteH);
 				ctx.restore();
 			} else {
 				ctx.font = `bold ${Math.max(34, Math.round(laneH * 0.48))}px serif`;
