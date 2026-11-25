@@ -99,8 +99,11 @@
 		const trackBottom = H * 0.88;
 		const trackHeight = trackBottom - trackTop;
 		const laneH = trackHeight / laneCount;
-		const trackLeft = Math.min(300, Math.max(220, W * 0.19));
-		const trackRight = W - 18;
+		const isMobile = W <= 600;
+		// Reserve a slim column for the lane badges on phones, without letting
+		// the badges cover the horse sprites. Desktop keeps the wider HUD gutter.
+		const trackLeft = isMobile ? Math.min(116, Math.max(104, W * 0.28)) : Math.min(300, Math.max(220, W * 0.19));
+		const trackRight = W - (isMobile ? 10 : 18);
 		const trackWidth = Math.max(80, trackRight - trackLeft);
 
 		const dirt = ctx.createLinearGradient(trackLeft, trackTop, trackRight, trackBottom);
@@ -154,7 +157,7 @@
 
 			// Keep the complete 320×256 sprite visible; a slightly larger draw size
 			// makes the horse's four legs and the jockey's lower legs readable on phones.
-			const spriteH = Math.min(laneH * 1.02, 166);
+			const spriteH = Math.min(laneH * (isMobile ? 0.94 : 1.02), isMobile ? 142 : 166);
 			const spriteW = spriteH * 1.25;
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
 			const horseY = y + laneH * 0.48;
