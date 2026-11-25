@@ -246,6 +246,27 @@
 			}
 		});
 
+		// Small rail-side markers slide backward with the dirt texture,
+		// adding peripheral motion without distracting from the horses.
+		const edgeMarkerSpacing = 34;
+		const edgeMarkerOffset = (now * 0.085) % edgeMarkerSpacing;
+		ctx.save();
+		ctx.beginPath();
+		ctx.rect(trackLeft, trackTop, trackWidth, trackHeight);
+		ctx.clip();
+		for (let x = trackLeft - edgeMarkerSpacing; x < trackRight + edgeMarkerSpacing; x += edgeMarkerSpacing) {
+			const markerX = x - edgeMarkerOffset;
+			ctx.strokeStyle = "rgba(255, 224, 177, 0.32)";
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.moveTo(markerX, trackTop + 3);
+			ctx.lineTo(markerX + 8, trackTop + 3);
+			ctx.moveTo(markerX, trackBottom - 3);
+			ctx.lineTo(markerX + 8, trackBottom - 3);
+			ctx.stroke();
+		}
+		ctx.restore();
+
 		// Inner and outer safety rails.
 		ctx.strokeStyle = "rgba(255, 246, 224, 0.92)";
 		ctx.lineWidth = 4;
