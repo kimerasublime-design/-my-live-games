@@ -157,7 +157,11 @@
 
 			// Keep the complete 320×256 sprite visible; a slightly larger draw size
 			// makes the horse's four legs and the jockey's lower legs readable on phones.
-			const spriteH = Math.min(laneH * (isMobile ? 0.94 : 1.02), isMobile ? 142 : 166);
+			// Leave a real vertical safety margin inside each lane. The source
+			// PNGs contain silhouettes close to their 320×256 canvas edges, so
+			// fitting them almost edge-to-edge can make hooves appear clipped
+			// against the lane separators on narrow screens.
+			const spriteH = Math.min(laneH * (isMobile ? 0.80 : 0.88), isMobile ? 124 : 150);
 			const spriteW = spriteH * 1.25;
 			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
 			const horseY = y + laneH * 0.48;
