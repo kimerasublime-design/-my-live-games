@@ -1,6 +1,9 @@
 name: Install horse sprite assets
 
 on:
+  push:
+    branches:
+      - feat/horse-sprites-v4-integration
   workflow_dispatch:
 
 permissions:
