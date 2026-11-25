@@ -1,0 +1,53 @@
+name: Install horse sprite assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/horse-sprites-v4-integration
+          fetch-depth: 0
+
+      - name: Extract V4 horse sprites
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="public/games/horse-racing/assets/kimera-live-games-horse-assets-v4(2).zip"
+          DEST="public/games/horse-racing/assets/horses"
+          test -f "$ZIP"
+          mkdir -p "$DEST"
+          TMP="$(mktemp -d)"
+          unzip -q "$ZIP" -d "$TMP"
+          test -d "$TMP/horses"
+          for horse in horse-01 horse-02 horse-03 horse-04 horse-05; do
+            test -d "$TMP/horses/$horse"
+            count="$(find "$TMP/horses/$horse" -maxdepth 1 -type f -name 'frame-*.png' | wc -l)"
+            test "$count" -eq 8
+          done
+          rm -rf "$DEST"
+          cp -R "$TMP/horses" "$DEST"
+          echo "Installed sprite files:"
+          find "$DEST" -type f -name 'frame-*.png' | sort
+          test "$(find "$DEST" -type f -name 'frame-*.png' | wc -l)" -eq 40
+
+      - name: Commit extracted sprites
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/games/horse-racing/assets/horses
+          if git diff --cached --quiet; then
+            echo "No sprite changes to commit."
+            exit 0
+          fi
+          git commit -m "Add extracted V4 horse sprite frames"
+          git push origin HEAD:feat/horse-sprites-v4-integration
