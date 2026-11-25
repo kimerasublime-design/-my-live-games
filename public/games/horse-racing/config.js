@@ -15,6 +15,8 @@
  */
 
 const CONFIG = {
+	// Slightly quicker sprite cadence for a more fluid gallop loop.
+	spriteFrameDuration: 95,
 	// ==========================================
 	// HORSES / RACE LANES
 	// Chat votes 1–5 select the matching horse.
