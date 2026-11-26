@@ -200,9 +200,12 @@
 			const isHorseTwo = lane.horseId === "horse-02";
 			const horseFrameDuration = isHorseTwo ? 108 : FRAME_DURATION;
 			const frameOffset = Math.round(i * FRAME_COUNT / laneCount);
+			const cyclePhase = (now / (horseFrameDuration * FRAME_COUNT)) * Math.PI * 2;
 			const frameIndex = (Math.floor(now / horseFrameDuration) + frameOffset) % FRAME_COUNT;
 			const sprite = frames[frameIndex];
-			const horseBob = isHorseTwo ? Math.sin((now / horseFrameDuration) * Math.PI / 2) * 1.6 : 0;
+			// One restrained body lift per complete eight-frame gallop cycle.
+			// This keeps the torso rhythm synchronized with the leg sequence.
+			const horseBob = isHorseTwo ? Math.sin(cyclePhase - Math.PI / 2) * 2.2 : 0;
 
 			// Soft moving contact shadow keeps the horse visually grounded
 			// on the dirt lane without obscuring the legs or hooves.
