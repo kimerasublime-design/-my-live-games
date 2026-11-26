@@ -265,3 +265,86 @@ body {
     transform: translateX(-50%) scale(1.05);
   }
 }
+
+
+/* Horse identity subtitle */
+.lane-label .lane-detail {
+  margin-left: 2px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.15px;
+}
+
+.lane-label .lane-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffd700;
+  font-weight: 800;
+}
+
+
+/* Mobile overlay: compact horse labels keep the racing surface visible. */
+@media (max-width: 600px) {
+  .phase-banner {
+    top: 8px;
+    max-width: calc(100vw - 24px);
+    padding: 7px 10px;
+    font-size: 13px;
+    gap: 6px;
+    border-radius: 8px;
+  }
+  #laneLabels {
+    left: 5px;
+    gap: 4px;
+  }
+  .lane-label {
+    min-width: 0;
+    width: 96px;
+    padding: 4px 5px;
+    border-left-width: 3px;
+    border-radius: 6px;
+    gap: 2px;
+  }
+  .lane-label .lane-top {
+    gap: 4px;
+  }
+  .lane-label .lane-flag {
+    width: 19px;
+    height: 19px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .lane-label .lane-name {
+    font-size: 9px;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lane-label .lane-vote {
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+  .lane-label .lane-dist {
+    font-size: 10px;
+  }
+  .lane-label .lane-detail,
+  .lane-label .lane-gifts {
+    display: none;
+  }
+  #eventFeed {
+    right: 6px;
+    bottom: 8px;
+    width: min(220px, 58vw);
+    max-height: 120px;
+  }
+  .feed-item {
+    padding: 4px 7px;
+    font-size: 9px;
+  }
+}

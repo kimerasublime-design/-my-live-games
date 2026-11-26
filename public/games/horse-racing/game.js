@@ -1,23 +1,19 @@
 /**
  * game.js
- * Horse Racing — Canvas renderer + TikTokBridge wiring.
- * Reads state from RaceEngine, draws track + horses on Canvas,
- * updates DOM HUD elements (flags, gift legend, event feed).
- *
- * @module games/horse-racing/game
+ * Kimera Live Games — five-lane horse race renderer.
+ * Loads the V4 transparent PNG gallop frames for each horse.
  */
-
 (() => {
-	// ==========================================
-	// SETUP
-	// ==========================================
+	"use strict";
+
 	const config = window.RACE_CONFIG;
 	const engine = new RaceEngine(config);
-
 	const canvas = document.getElementById("raceCanvas");
 	const ctx = canvas.getContext("2d");
+	// Keep scaled transparent horse sprites smooth on high-DPI and mobile screens.
+	ctx.imageSmoothingEnabled = true;
+	if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
 
-	// DOM HUD elements
 	const phaseBanner = document.getElementById("phaseBanner");
 	const phaseText = document.getElementById("phaseText");
 	const phaseTimer = document.getElementById("phaseTimer");
@@ -28,26 +24,42 @@
 	const winnerName = document.getElementById("winnerName");
 	const winnerSupporters = document.getElementById("winnerSupporters");
 
-	// ==========================================
-	// CANVAS SIZING
-	// ==========================================
+	const FRAME_COUNT = 8;
+	const FRAME_DURATION = config.spriteFrameDuration || 110;
+	const spriteSets = new Map();
+
 	function resize() {
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		canvas.width = Math.round(window.innerWidth * dpr);
+		canvas.height = Math.round(window.innerHeight * dpr);
+		canvas.style.width = window.innerWidth + "px";
+		canvas.style.height = window.innerHeight + "px";
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	}
 	window.addEventListener("resize", resize);
 	resize();
 
-	// ==========================================
-	// BRIDGE → ENGINE WIRING
-	// ==========================================
+	function loadHorseSprites() {
+		config.lanes.forEach((lane) => {
+			const frames = [];
+			for (let i = 1; i <= FRAME_COUNT; i++) {
+				const image = new Image();
+				image.decoding = lane.horseId === "horse-02" ? "sync" : "async";
+				if (lane.horseId === "horse-02" && "fetchPriority" in image) image.fetchPriority = "high";
+				image.src = `assets/horses/${lane.horseId}/frame-${String(i).padStart(2, "0")}.png`;
+				// Decode the full gallop set ahead of use to reduce first-loop stutter.
+				if (typeof image.decode === "function") image.decode().catch(() => {});
+				frames.push(image);
+			}
+			spriteSets.set(lane.horseId, frames);
+		});
+	}
+	loadHorseSprites();
+
 	TikTokBridge.on("gift", (data) => engine.handleGift(data));
 	TikTokBridge.on("chat", (data) => engine.handleChat(data));
 	TikTokBridge.on("like", (data) => engine.handleLike(data));
 
-	// ==========================================
-	// BUILD LANE LABELS (with gift legend)
-	// ==========================================
 	function buildLaneLabels() {
 		laneLabelsDiv.innerHTML = "";
 		config.lanes.forEach((lane) => {
@@ -55,189 +67,277 @@
 			el.className = "lane-label";
 			el.id = `lane-label-${lane.id}`;
 			el.style.borderLeftColor = lane.color;
-
-			// Get gift emojis for this lane across all tiers
 			const giftEmojis = config.getLaneGiftEmojis(lane.id).join(" ");
-			const voteNum = lane.id + 1; // 1-indexed for viewers
-
 			el.innerHTML =
 				`<div class="lane-top">` +
-				`<span class="lane-flag">${lane.flag}</span> ` +
-				`<span class="lane-name">${lane.name}</span> ` +
-				`<span class="lane-vote">Type ${voteNum}</span>` +
-				`<span class="lane-dist">0%</span>` +
+					`<span class="lane-flag" aria-hidden="true">${lane.number}</span>` +
+					`<span class="lane-name">${lane.name}</span>` +
+					`<span class="lane-vote">VOTO ${lane.number}</span>` +
+					`<span class="lane-dist">0%</span>` +
 				`</div>` +
+				`<div class="lane-detail">${lane.detail}</div>` +
 				`<div class="lane-gifts">${giftEmojis}</div>`;
 			laneLabelsDiv.appendChild(el);
 		});
 	}
 	buildLaneLabels();
 
-	// Rebuild lane labels on reset (flags might re-render)
 	engine.on("phaseChange", ({ phase }) => {
 		if (phase === "waiting") buildLaneLabels();
 	});
 
-	// ==========================================
-	// RENDER LOOP
-	// ==========================================
-	let lastFeedCount = 0;
-
-	function frame() {
+	let lastFeedSignature = "";
+	function frame(now) {
 		const state = engine.tick();
-		drawTrack(state);
+		drawTrack(state, now || performance.now());
 		updateHUD(state);
 		requestAnimationFrame(frame);
 	}
 
-	// ==========================================
-	// CANVAS DRAWING
-	// ==========================================
-	function drawTrack(state) {
-		const W = canvas.width;
-		const H = canvas.height;
+	function drawTrack(state, now) {
+		const W = window.innerWidth;
+		const H = window.innerHeight;
 		const laneCount = state.lanes.length;
-
-		// Clear
 		ctx.clearRect(0, 0, W, H);
 
-		// Track dimensions
-		const trackTop = H * 0.15;
-		const trackBottom = H * 0.85;
+		// Give the racing surface more vertical room so each horse has a
+		// taller lane and the jockey's legs and all four hooves remain readable.
+		const trackTop = H * 0.12;
+		const trackBottom = H * 0.90;
 		const trackHeight = trackBottom - trackTop;
 		const laneH = trackHeight / laneCount;
-		const trackLeft = 275; // space for wider lane labels with gift icons
-		const trackRight = W - 60; // extra margin for FINISH label
-		const trackWidth = trackRight - trackLeft;
+		const isMobile = W <= 600;
+		const trackLeft = isMobile ? Math.min(108, Math.max(94, W * 0.265)) : Math.min(280, Math.max(210, W * 0.18));
+		const trackRight = W - (isMobile ? 8 : 18);
+		const trackWidth = Math.max(80, trackRight - trackLeft);
 
-		// Draw track background
-		ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+		const dirt = ctx.createLinearGradient(trackLeft, trackTop, trackRight, trackBottom);
+		dirt.addColorStop(0, "#c98550");
+		dirt.addColorStop(0.48, "#a65d34");
+		dirt.addColorStop(1, "#824328");
+		ctx.fillStyle = "rgba(24, 17, 13, 0.82)";
 		ctx.beginPath();
-		ctx.roundRect(
-			trackLeft - 10,
-			trackTop - 10,
-			trackWidth + 20,
-			trackHeight + 20,
-			12,
-		);
+		if (typeof ctx.roundRect === "function") ctx.roundRect(trackLeft - 9, trackTop - 9, trackWidth + 18, trackHeight + 18, 13);
+		else ctx.rect(trackLeft - 9, trackTop - 9, trackWidth + 18, trackHeight + 18);
 		ctx.fill();
+		ctx.fillStyle = dirt;
+		ctx.fillRect(trackLeft, trackTop, trackWidth, trackHeight);
 
-		// Draw lanes
+		// Stronger dirt relief: layered hoof grooves, long motion streaks,
+		// scattered clods and fine grain move at different speeds for depth.
+		ctx.save();
+		ctx.beginPath();
+		ctx.rect(trackLeft, trackTop, trackWidth, trackHeight);
+		ctx.clip();
+		const dirtScroll = (now * 0.072) % (trackWidth + 90);
+		for (let i = 0; i < 34; i++) {
+			const baseX = ((i * 127) % 991) / 991 * (trackWidth + 90);
+			const px = trackLeft + ((baseX - dirtScroll + trackWidth + 90) % (trackWidth + 90)) - 45;
+			const py = trackTop + ((i * 173) % 983) / 983 * trackHeight;
+			const length = 22 + (i % 6) * 13;
+			ctx.strokeStyle = i % 2 === 0 ? "rgba(65, 29, 15, 0.30)" : "rgba(255, 207, 145, 0.25)";
+			ctx.lineWidth = i % 4 === 0 ? 3 : 1.6;
+			ctx.beginPath();
+			ctx.moveTo(px, py);
+			ctx.quadraticCurveTo(px + length * 0.45, py + ((i % 5) - 2) * 1.8, px + length, py + ((i % 3) - 1) * 2.2);
+			ctx.stroke();
+		}
+		const grainScroll = (now * 0.031) % trackWidth;
+		for (let i = 0; i < 190; i++) {
+			const baseX = ((i * 73) % 997) / 997 * trackWidth;
+			const px = trackLeft + ((baseX - grainScroll + trackWidth) % trackWidth);
+			const py = trackTop + ((i * 137) % 991) / 991 * trackHeight;
+			if (i % 5 === 0) {
+				ctx.fillStyle = "rgba(54, 25, 13, 0.24)";
+				ctx.beginPath();
+				ctx.ellipse(px, py, 2.8 + (i % 4), 1.5 + (i % 3) * 0.45, 0.12, 0, Math.PI * 2);
+				ctx.fill();
+			} else {
+				ctx.strokeStyle = i % 3 === 0 ? "rgba(255, 224, 177, 0.24)" : "rgba(52, 25, 13, 0.22)";
+				ctx.lineWidth = i % 4 === 0 ? 2 : 1;
+				ctx.beginPath();
+				ctx.moveTo(px, py);
+				ctx.lineTo(px + 4 + (i % 12), py + ((i % 5) - 2) * 0.8);
+				ctx.stroke();
+			}
+		}
+		ctx.restore();
+
 		state.lanes.forEach((lane, i) => {
 			const y = trackTop + i * laneH;
-
-			// Lane stripe (alternating)
 			if (i % 2 === 0) {
-				ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+				ctx.fillStyle = "rgba(255, 220, 180, 0.085)";
 				ctx.fillRect(trackLeft, y, trackWidth, laneH);
 			}
-
-			// Lane divider
 			if (i > 0) {
-				ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-				ctx.lineWidth = 1;
-				ctx.setLineDash([8, 8]);
+				ctx.strokeStyle = "rgba(255, 239, 215, 0.72)";
+				ctx.lineWidth = 2;
+				ctx.setLineDash([12, 9]);
+				// Dashed lane markings stream backward with the dirt surface.
+				ctx.lineDashOffset = (now * 0.085) % 21;
 				ctx.beginPath();
-				ctx.moveTo(trackLeft, y);
-				ctx.lineTo(trackRight, y);
+				ctx.moveTo(trackLeft + 2, y);
+				ctx.lineTo(trackRight - 2, y);
 				ctx.stroke();
 				ctx.setLineDash([]);
 			}
 
-			// Progress bar
 			const progress = Math.min(lane.distance / config.finishLine, 1);
-			const barWidth = trackWidth * progress;
-			ctx.fillStyle = lane.color + "40"; // semi-transparent
-			ctx.fillRect(trackLeft, y + 4, barWidth, laneH - 8);
+			ctx.fillStyle = "rgba(255, 232, 190, 0.34)";
+			ctx.fillRect(trackLeft + 2, y + laneH * 0.92, trackWidth - 4, Math.max(3, laneH * 0.022));
+			ctx.fillStyle = lane.color + "D0";
+			ctx.fillRect(trackLeft + 2, y + laneH * 0.92, (trackWidth - 4) * progress, Math.max(3, laneH * 0.022));
 
-			// Horse position
-			const horseX = trackLeft + barWidth;
-			const horseY = y + laneH / 2;
+			// Larger proportional rendering: the earlier safety-margin setting
+			// made the horse and jockey too small on phone screens.
+			const spriteH = Math.min(laneH * (isMobile ? 0.91 : 0.92), isMobile ? 148 : 168);
+			const spriteW = spriteH * 1.25;
+			const horseX = trackLeft + spriteW / 2 + (trackWidth - spriteW) * progress;
+			const horseY = y + laneH * 0.49;
+			const frames = spriteSets.get(lane.horseId) || [];
+			// Horse 2 uses a slightly longer, individually phased cycle so the
+			// foreleg/hind-leg transitions read clearly instead of flickering.
+			const isHorseTwo = lane.horseId === "horse-02";
+			const horseFrameDuration = isHorseTwo ? 108 : FRAME_DURATION;
+			const frameOffset = Math.round(i * FRAME_COUNT / laneCount);
+			const cyclePhase = (now / (horseFrameDuration * FRAME_COUNT)) * Math.PI * 2;
+			const frameIndex = (Math.floor(now / horseFrameDuration) + frameOffset) % FRAME_COUNT;
+			const sprite = frames[frameIndex];
+			// One restrained body lift per complete eight-frame gallop cycle.
+			// This keeps the torso rhythm synchronized with the leg sequence.
+			const horseBob = isHorseTwo ? Math.sin(cyclePhase - Math.PI / 2) * 2.2 : 0;
 
-			// Horse circle (lane color)
+			// Soft moving contact shadow keeps the horse visually grounded
+			// on the dirt lane without obscuring the legs or hooves.
+			ctx.save();
+			const shadowX = horseX - spriteW * 0.02;
+			const shadowY = horseY + spriteH * 0.405 + horseBob * 0.35;
+			const shadowGradient = ctx.createRadialGradient(shadowX, shadowY, 2, shadowX, shadowY, spriteW * 0.34);
+			shadowGradient.addColorStop(0, "rgba(28, 16, 10, 0.34)");
+			shadowGradient.addColorStop(1, "rgba(28, 16, 10, 0)");
+			ctx.fillStyle = shadowGradient;
 			ctx.beginPath();
-			ctx.arc(horseX, horseY, laneH * 0.3, 0, Math.PI * 2);
-			ctx.fillStyle = lane.color;
+			ctx.ellipse(shadowX, shadowY, spriteW * 0.34, Math.max(4, laneH * 0.055), 0, 0, Math.PI * 2);
 			ctx.fill();
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = 2;
-			ctx.stroke();
+			ctx.restore();
 
-			// Country flag emoji on the horse
-			const flagSize = Math.round(laneH * 0.4);
-			ctx.font = `${flagSize}px serif`;
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			ctx.fillText(lane.flag, horseX, horseY);
-		});
+			// Small hoof-level dust plume follows each galloping horse.
+			// The deterministic phase keeps the particles smooth without
+			// creating random flicker or allocating particle objects per frame.
+			const dustPhase = now * 0.006 + i * 1.73;
+			const dustX = horseX - spriteW * 0.30;
+			const dustY = horseY + spriteH * 0.29;
+			ctx.save();
+			for (let p = 0; p < 6; p++) {
+				const phase = dustPhase + p * 1.05;
+				const drift = (p * 13 + (now * 0.025) % 34);
+				const px = dustX - drift;
+				const py = dustY + Math.sin(phase) * (3 + p * 1.2);
+				const radiusX = 3 + (p % 3) * 2;
+				const radiusY = 1.8 + (p % 2) * 1.2;
+				const alpha = 0.12 + (0.12 * (1 + Math.sin(phase)) / 2);
+				ctx.fillStyle = `rgba(245, 207, 163, ${alpha})`;
+				ctx.beginPath();
+				ctx.ellipse(px, py, radiusX, radiusY, -0.12, 0, Math.PI * 2);
+				ctx.fill();
+			}
+			ctx.restore();
 
-		// Finish line
-		ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
-		ctx.lineWidth = 3;
-		ctx.setLineDash([12, 6]);
-		ctx.beginPath();
-		ctx.moveTo(trackRight, trackTop - 5);
-		ctx.lineTo(trackRight, trackBottom + 5);
-		ctx.stroke();
-		ctx.setLineDash([]);
-
-		// Finish label
-		ctx.fillStyle = "#ffd700";
-		ctx.font = "bold 14px sans-serif";
-		ctx.textAlign = "center";
-		ctx.fillText("🏁 FINISH", trackRight, trackTop - 15);
-	}
-
-	// ==========================================
-	// HUD UPDATE
-	// ==========================================
-	function updateHUD(state) {
-		// Phase text
-		const phaseLabels = {
-			waiting: "🏇 Waiting for gifts to start...",
-			countdown: "⏳ Race starting in...",
-			racing: "🏁 RACE IN PROGRESS!",
-			finished: "🎉 RACE FINISHED!",
-			cooldown: "⏳ Next race soon...",
-		};
-		phaseText.textContent = phaseLabels[state.phase] || state.phase;
-
-		// Phase timer
-		const remaining = engine.phaseRemaining();
-		if (remaining !== Infinity && remaining > 0) {
-			phaseTimer.textContent = Math.ceil(remaining / 1000) + "s";
-		} else {
-			phaseTimer.textContent = "";
-		}
-
-		// Countdown pulse animation
-		if (state.phase === "countdown") {
-			phaseBanner.classList.add("countdown");
-		} else {
-			phaseBanner.classList.remove("countdown");
-		}
-
-		// Lane labels (progress %)
-		state.lanes.forEach((lane) => {
-			const el = document.getElementById(`lane-label-${lane.id}`);
-			if (el) {
-				const pct = Math.round((lane.distance / config.finishLine) * 100);
-				el.querySelector(".lane-dist").textContent = pct + "%";
+			if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+				ctx.save();
+				ctx.shadowColor = "rgba(35, 18, 10, 0.42)";
+				ctx.shadowBlur = 6;
+				ctx.shadowOffsetY = 3;
+				ctx.drawImage(sprite, horseX - spriteW / 2, horseY - spriteH / 2 + horseBob, spriteW, spriteH);
+				ctx.restore();
+			} else {
+				ctx.font = `bold ${Math.max(34, Math.round(laneH * 0.48))}px serif`;
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillText("🐎", horseX, horseY);
 			}
 		});
 
-		// Event feed
-		if (state.recentEvents.length !== lastFeedCount) {
-			lastFeedCount = state.recentEvents.length;
+		// Small rail-side markers slide backward with the dirt texture,
+		// adding peripheral motion without distracting from the horses.
+		const edgeMarkerSpacing = 34;
+		const edgeMarkerOffset = (now * 0.085) % edgeMarkerSpacing;
+		ctx.save();
+		ctx.beginPath();
+		ctx.rect(trackLeft, trackTop, trackWidth, trackHeight);
+		ctx.clip();
+		for (let x = trackLeft - edgeMarkerSpacing; x < trackRight + edgeMarkerSpacing; x += edgeMarkerSpacing) {
+			const markerX = x - edgeMarkerOffset;
+			ctx.strokeStyle = "rgba(255, 224, 177, 0.32)";
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.moveTo(markerX, trackTop + 3);
+			ctx.lineTo(markerX + 8, trackTop + 3);
+			ctx.moveTo(markerX, trackBottom - 3);
+			ctx.lineTo(markerX + 8, trackBottom - 3);
+			ctx.stroke();
+		}
+		ctx.restore();
+
+		// Inner and outer safety rails.
+		ctx.strokeStyle = "rgba(255, 246, 224, 0.92)";
+		ctx.lineWidth = 4;
+		ctx.beginPath();
+		ctx.moveTo(trackLeft, trackTop);
+		ctx.lineTo(trackRight, trackTop);
+		ctx.moveTo(trackLeft, trackBottom);
+		ctx.lineTo(trackRight, trackBottom);
+		ctx.stroke();
+		ctx.strokeStyle = "rgba(73, 37, 20, 0.78)";
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(trackLeft, trackTop + 7);
+		ctx.lineTo(trackRight, trackTop + 7);
+		ctx.moveTo(trackLeft, trackBottom - 7);
+		ctx.lineTo(trackRight, trackBottom - 7);
+		ctx.stroke();
+
+		const checkerSize = Math.max(9, Math.min(16, laneH / 8));
+		for (let row = 0; row < 8; row++) {
+			for (let col = 0; col < 2; col++) {
+				ctx.fillStyle = (row + col) % 2 === 0 ? "#fff" : "#202020";
+				ctx.fillRect(trackRight - checkerSize * 2 + col * checkerSize,
+					trackTop + row * (trackHeight / 8), checkerSize, trackHeight / 8 + 1);
+			}
+		}
+		ctx.fillStyle = "#fff0c9";
+		ctx.font = "bold 12px sans-serif";
+		ctx.textAlign = "right";
+		ctx.fillText("CHEGADA", trackRight - 4, trackTop - 14);
+	}
+
+	function updateHUD(state) {
+		const phaseLabels = {
+			waiting: "🏇 Aguardando votos e presentes...",
+			countdown: "⏳ Corrida começa em...",
+			racing: "🏁 CORRIDA EM ANDAMENTO!",
+			finished: "🏆 CORRIDA FINALIZADA!",
+			cooldown: "⏳ Próxima corrida em instantes...",
+		};
+		phaseText.textContent = phaseLabels[state.phase] || state.phase;
+		const remaining = engine.phaseRemaining();
+		phaseTimer.textContent = remaining !== Infinity && remaining > 0 ? Math.ceil(remaining / 1000) + "s" : "";
+		phaseBanner.classList.toggle("countdown", state.phase === "countdown");
+
+		state.lanes.forEach((lane) => {
+			const el = document.getElementById(`lane-label-${lane.id}`);
+			if (el) el.querySelector(".lane-dist").textContent =
+				Math.round((lane.distance / config.finishLine) * 100) + "%";
+		});
+
+		const signature = state.recentEvents.map((evt) => evt.timestamp).join(",");
+		if (signature !== lastFeedSignature) {
+			lastFeedSignature = signature;
 			renderFeed(state.recentEvents.slice(0, 8));
 		}
 
-		// Winner overlay
-		if (state.phase === "finished" && state.winner) {
-			showWinner(state.winner);
-		} else {
-			winnerOverlay.classList.add("hidden");
-		}
+		if (state.phase === "finished" && state.winner) showWinner(state.winner);
+		else winnerOverlay.classList.add("hidden");
 	}
 
 	function renderFeed(events) {
@@ -246,9 +346,9 @@
 			const el = document.createElement("div");
 			el.className = "feed-item " + evt.type;
 			if (evt.type === "gift") {
-				el.textContent = `${evt.giftEmoji} ${evt.nickname} → ${evt.laneFlag} (+${evt.distance})`;
+				el.textContent = `${evt.giftEmoji} ${evt.nickname} → ${evt.laneName} (+${evt.distance})`;
 			} else if (evt.type === "vote") {
-				el.textContent = `💬 ${evt.nickname} → ${evt.laneFlag} (+${evt.distance})`;
+				el.textContent = `💬 ${evt.nickname} → ${evt.laneName} (+${evt.distance})`;
 			} else if (evt.type === "chat") {
 				el.textContent = `💬 ${evt.nickname}: ${evt.text}`;
 			} else if (evt.type === "like") {
@@ -260,29 +360,17 @@
 
 	function showWinner(winner) {
 		winnerOverlay.classList.remove("hidden");
-		winnerEmoji.textContent = winner.flag;
-		winnerName.textContent = winner.name + " WINS!";
+		winnerEmoji.textContent = "🏆";
+		winnerName.textContent = winner.name + " VENCEU!";
 		winnerName.style.color = winner.color;
-
-		// Top 3 supporters
 		const supporters = Array.from(winner.supporters.values())
 			.sort((a, b) => b.totalContrib - a.totalContrib)
 			.slice(0, 3);
-
-		if (supporters.length > 0) {
-			winnerSupporters.textContent =
-				"Top supporters: " +
-				supporters.map((s) => `${s.nickname} (${s.totalContrib})`).join(", ");
-		} else {
-			winnerSupporters.textContent = "";
-		}
+		winnerSupporters.textContent = supporters.length
+			? "Maiores apoiadores: " + supporters.map((s) => `${s.nickname} (${s.totalContrib})`).join(", ")
+			: "";
 	}
 
-	// ==========================================
-	// START
-	// ==========================================
 	requestAnimationFrame(frame);
-	console.log(
-		"[HorseRacing] Game loaded, waiting for TikTokBridge connection...",
-	);
+	console.log("[KimeraHorseRacing] Five horse sprite lanes initialized.");
 })();

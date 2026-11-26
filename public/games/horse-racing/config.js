@@ -3,7 +3,7 @@
  * Horse Racing game configuration.
  *
  * LANE SYSTEM:
- * - Each lane = a country flag (viewers root for their country).
+ * - Each lane represents one of the five individual horses.
  * - Gifts are mapped to lanes by name, balanced across value tiers.
  * - Overlay shows which gift powers which horse.
  *
@@ -15,22 +15,25 @@
  */
 
 const CONFIG = {
+	// Slightly quicker sprite cadence for a more fluid gallop loop.
+	spriteFrameDuration: 95,
 	// ==========================================
-	// LANES (HORSES = COUNTRY FLAGS)
-	// Top TikTok markets in Asia
+	// HORSES / RACE LANES
+	// Chat votes 1–5 select the matching horse.
+	// Sprite frames are loaded from assets/horses/horse-NN/.
 	// ==========================================
 	lanes: [
-		{ id: 0, name: "Vietnam", flag: "🇻🇳", color: "#FF4444", aliases: ["vn", "vietnam", "viet nam", "viet"] },
-		{ id: 1, name: "Thailand", flag: "🇹🇭", color: "#4488FF", aliases: ["th", "tl", "thailand", "thai"] },
-		{ id: 2, name: "Indonesia", flag: "🇮🇩", color: "#44DD44", aliases: ["id", "indonesia", "indo"] },
-		{ id: 3, name: "Malaysia", flag: "🇲🇾", color: "#FFCC00", aliases: ["my", "ml", "malaysia", "malay"] },
-		{ id: 4, name: "China", flag: "🇨🇳", color: "#CC44FF", aliases: ["cn", "china", "trung quoc", "trung"] },
+		{ id: 0, number: 1, horseId: "horse-01", name: "Cavalo 1", detail: "Castanho · jóquei verde", flag: "🐎", color: "#2FA66A", aliases: ["cavalo 1", "horse 1", "castanho"] },
+		{ id: 1, number: 2, horseId: "horse-02", name: "Cavalo 2", detail: "Alazão · jóquei vermelho", flag: "🐎", color: "#D94A42", aliases: ["cavalo 2", "horse 2", "alazao", "alazão"] },
+		{ id: 2, number: 3, horseId: "horse-03", name: "Cavalo 3", detail: "Malhado · jóquei azul", flag: "🐎", color: "#397CC5", aliases: ["cavalo 3", "horse 3", "malhado"] },
+		{ id: 3, number: 4, horseId: "horse-04", name: "Cavalo 4", detail: "Palomino · jóquei roxo", flag: "🐎", color: "#8656C7", aliases: ["cavalo 4", "horse 4", "palomino"] },
+		{ id: 4, number: 5, horseId: "horse-05", name: "Cavalo 5", detail: "Tordilho · jóquei azul-marinho/laranja", flag: "🐎", color: "#E58A35", aliases: ["cavalo 5", "horse 5", "tordilho"] },
 	],
 
 	// ==========================================
 	// GIFT → LANE MAPPING (by value tier)
 	// Each tier: equal-cost gifts, one per lane.
-	// Array index = lane index (0=VN, 1=TH, 2=ID, 3=MY, 4=CN).
+	// Array index = lane index (0=Cavalo 1 ... 4=Cavalo 5).
 	// ==========================================
 	giftTiers: [
 		{
@@ -157,8 +160,8 @@ const CONFIG = {
 	},
 
 	/**
-	 * Chat-based lane selection.
-	 * Viewer types country code (VN, TH, ID, MY, CN), aliases, or number 1-5.
+	 * Chat-based horse selection.
+	 * Viewer types the horse number (1-5) or a horse alias.
 	 * Case-insensitive, trimmed.
 	 * @returns {number} lane index or -1 if no match
 	 */
@@ -174,7 +177,7 @@ const CONFIG = {
 		if (!this._chatAliasMap) {
 			this._chatAliasMap = {};
 			for (const lane of this.lanes) {
-				// Country name itself
+				// Horse name itself
 				this._chatAliasMap[lane.name.toLowerCase()] = lane.id;
 				// All aliases
 				for (const alias of lane.aliases || []) {
