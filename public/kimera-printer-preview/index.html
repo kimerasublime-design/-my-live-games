@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101511"><title>Kimera Live Printer — Prévia visual</title>
+<style>
+:root{color-scheme:dark;--bg:#101511;--panel:#1a211c;--gold:#d5b56b;--cream:#f4eddb;--muted:#a8b0a8;--green:#8eaa83}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 24%,#334036 0,#172019 44%,#0b0e0c 100%);color:#f6f2e9;font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.app{width:min(100%,520px);margin:auto;min-height:100vh;padding:16px 15px 26px;display:flex;flex-direction:column;gap:13px}
+.top{display:flex;align-items:center;justify-content:space-between}.brand{display:flex;gap:10px;align-items:center}.logo{width:39px;height:39px;border:1px solid #bda56d;border-radius:12px;display:grid;place-items:center;color:var(--gold);font-size:21px;background:#222b23}.brand strong{display:block;letter-spacing:.12em;font-size:13px}.brand small{color:var(--muted);font-size:10px;letter-spacing:.16em}.live{font-size:11px;color:#e9c6a0;border:1px solid #66513a;padding:6px 10px;border-radius:20px}
+.heading{text-align:center;margin:4px 0 0}.heading h1{font:600 clamp(21px,5vw,27px)/1.1 Georgia,serif;margin:0 0 5px}.heading p{color:#bac1b8;margin:0;font-size:12px}
+.machine{position:relative;isolation:isolate;flex:1;min-height:500px;border-radius:23px;padding:14px 12px 17px;background:linear-gradient(135deg,#49544d,#151b17 22%,#303a33 48%,#111713 78%,#596158);box-shadow:0 24px 50px #0009,inset 0 1px 1px #ffffff55,inset 0 -6px 12px #0009;border:1px solid #738075}
+.machine:before{content:"";position:absolute;inset:9px;border-radius:17px;border:1px solid #a4afa455;pointer-events:none}
+.machine-top{height:35px;display:flex;justify-content:space-between;align-items:center;padding:0 12px;color:#d5ddcf;font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#9cc78b;box-shadow:0 0 9px #a8df91;margin-right:6px}
+.bed{position:relative;height:390px;margin:0 8px;border-radius:12px;background:linear-gradient(145deg,#aeb8b0,#56625b 10%,#202923 23%,#101713 82%,#7b877d);padding:13px;box-shadow:inset 0 4px 9px #000b,0 5px 9px #0009}
+.bed-inner{position:absolute;inset:12px;border-radius:8px;background:linear-gradient(135deg,#d7d0bd,#f3eddd 18%,#e9e2d1 70%,#c4baa5);box-shadow:inset 0 0 0 2px #716e61,inset 0 0 22px #736d5b66;overflow:hidden}
+.bed-inner:before{content:"";position:absolute;inset:9px;border:1px solid #a49b88;border-radius:4px;opacity:.5}
+.paper{position:absolute;inset:19px 18px 14px;background:#faf7ed;box-shadow:0 5px 13px #0005,inset 0 0 0 1px #d8d1c3;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.paper:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,#b8b1a2 4px);opacity:.12;pointer-events:none}
+.photo{position:relative;width:66%;aspect-ratio:1;border-radius:50%;border:7px solid #202720;background:radial-gradient(circle at 50% 32%,#f2d7b8 0 16%,transparent 17%),radial-gradient(ellipse at 50% 83%,#293a34 0 33%,transparent 34%),linear-gradient(145deg,#d5b5a0,#778f81 53%,#25332e);box-shadow:0 5px 13px #0004;display:grid;place-items:center;overflow:hidden;transition:transform .5s,opacity .5s}
+.photo:before{content:"";position:absolute;inset:9px;border:1px solid #ffffff8c;border-radius:50%}.photo:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,#fff5 48%,transparent 58%);transform:translateX(-100%);animation:shine 4s infinite}
+.avatar{font-size:clamp(62px,17vw,90px);filter:drop-shadow(0 5px 3px #0003);z-index:1}.photo-label{position:absolute;bottom:13%;font-size:9px;letter-spacing:.18em;color:#fff;background:#17211bd9;padding:4px 9px;border-radius:20px;z-index:2}
+.gantry{position:absolute;left:0;right:0;top:27px;height:20px;background:linear-gradient(#d8ddd6,#59655e 30%,#202923 68%,#87938a);box-shadow:0 4px 7px #0008;z-index:4;border-radius:3px}
+.gantry:before,.gantry:after{content:"";position:absolute;top:-14px;bottom:-14px;width:13px;border-radius:5px;background:linear-gradient(90deg,#29332d,#b3bdb4,#414b44);box-shadow:0 0 4px #0008}.gantry:before{left:11px}.gantry:after{right:11px}
+.head{position:absolute;top:-13px;left:50%;width:57px;height:43px;transform:translateX(-50%);border-radius:8px;background:linear-gradient(110deg,#202923,#78847b 45%,#303a33);border:1px solid #b1b9ae;box-shadow:0 5px 8px #0009;animation:scan 5s ease-in-out infinite alternate}
+.head:after{content:"";position:absolute;bottom:-9px;left:22px;width:12px;height:12px;background:#c8b98d;clip-path:polygon(20% 0,80% 0,50% 100%);filter:drop-shadow(0 1px 2px #000)}
+.machine.printing .head{animation-duration:1.5s}
+.machine.printing .photo{animation:printPulse 1.5s ease-in-out infinite}
+.machine-foot{height:38px;margin:0 17px;background:linear-gradient(#7b877e,#28322b 28%,#111713);border-radius:0 0 12px 12px;box-shadow:0 9px 12px #0008;display:flex;align-items:center;justify-content:center;color:#a9b3a9;font-size:9px;letter-spacing:.22em}
+.progress-wrap{margin:14px 9px 0;background:#151c17;border:1px solid #536054;border-radius:9px;padding:9px 11px}.progress-head{display:flex;justify-content:space-between;font-size:10px;color:#c9d0c7;margin-bottom:7px}.track{height:5px;background:#39443b;border-radius:8px;overflow:hidden}.fill{height:100%;width:68%;background:linear-gradient(90deg,#9aaf82,#e0c37d);border-radius:8px;transition:width .4s}
+.info-row{display:flex;gap:9px}.info-card{background:#1b241e;border:1px solid #465346;border-radius:13px;padding:10px 12px;flex:1;min-width:0}.info-card small{display:block;color:#aab4a8;font-size:9px;letter-spacing:.12em;text-transform:uppercase}.info-card strong{display:block;font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.actions button,.primary{border:1px solid #88754e;background:linear-gradient(145deg,#d4b979,#9d8048);color:#1a1d16;border-radius:11px;padding:11px 7px;font-weight:700;font-size:11px;box-shadow:0 4px 9px #0005;cursor:pointer}.actions button:active,.primary:active{transform:translateY(1px)}.actions button span{display:block;font-size:17px;margin-bottom:3px}
+.footer{text-align:center;color:#869187;font-size:10px}.footer b{color:#c8b477;font-weight:600}
+@keyframes scan{from{left:19%}to{left:81%}}@keyframes printPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.13)}}@keyframes shine{0%,65%{transform:translateX(-110%)}100%{transform:translateX(110%)}} 
+@media(min-width:600px){.app{padding-top:24px}.machine{min-height:560px}.bed{height:430px}.photo{width:55%}}
+@media(max-height:760px){.bed{height:330px}.machine{min-height:440px}}
+</style>
+</head>
+<body><main class="app">
+<header class="top"><div class="brand"><div class="logo">✳</div><div><strong>KIMERA</strong><small>LIVE PRINTER</small></div></div><div class="live"><i class="status-dot"></i>PRÉVIA DEMO</div></header>
+<section class="heading"><h1>Impressão ao vivo</h1><p>Uma lembrança de cada espectador, impressa em tempo real.</p></section>
+<section class="machine" id="machine">
+ <div class="machine-top"><span>KL-01 · Photo lab</span><span><i class="status-dot"></i>Máquina pronta</span></div>
+ <div class="bed"><div class="bed-inner"><div class="paper"><div class="photo" id="photo"><span class="avatar" id="avatar">🧑🏻</span><span class="photo-label" id="photoLabel">@visitante</span></div></div></div><div class="gantry"><div class="head"></div></div></div>
+ <div class="machine-foot">KIMERA · PRECISION PRINT SYSTEM</div>
+ <div class="progress-wrap"><div class="progress-head"><span id="progressText">FOTO FINALIZADA</span><b id="percent">68%</b></div><div class="track"><div class="fill" id="fill"></div></div></div>
+</section>
+<section class="info-row"><div class="info-card"><small>Última impressão</small><strong id="lastUser">@visitante</strong></div><div class="info-card"><small>Fila de impressão</small><strong id="queue">02 fotos aguardando</strong></div></section>
+<section class="actions"><button id="print"><span>🖨️</span>IMPRIMIR FOTO</button><button id="gift"><span>🌹</span>ENVIAR PRESENTE</button><button id="next"><span>⏭️</span>PRÓXIMO PERFIL</button></section>
+<div class="footer">Modo de demonstração · <b>Conexão TikTok LIVE ainda não ativada nesta prévia</b></div>
+</main>
+<script>
+const users=[{name:"@bokenroo",emoji:"👩🏻‍🎤"},{name:"@apa_live",emoji:"🧑🏽"},{name:"@chanesar",emoji:"👨🏻‍🦱"},{name:"@kim_heart",emoji:"👩🏻"},{name:"@laura_star",emoji:"👩🏼‍🦰"}];let index=0,prints=0,busy=false;
+const $=id=>document.getElementById(id);
+function showUser(){const u=users[index%users.length];$("avatar").textContent=u.emoji;$("photoLabel").textContent=u.name;$("lastUser").textContent=u.name;$("queue").textContent=(users.length-(index%users.length)-1)+" fotos aguardando"}
+function runPrint(){if(busy)return;busy=true;const machine=$("machine");machine.classList.add("printing");$("progressText").textContent="IMPRIMINDO FOTO";let p=0;const timer=setInterval(()=>{p+=4;$("fill").style.width=p+"%";$("percent").textContent=p+"%";if(p>=100){clearInterval(timer);machine.classList.remove("printing");$("progressText").textContent="IMPRESSÃO CONCLUÍDA";prints++;$("percent").textContent="100%";$("lastUser").textContent=users[index%users.length].name+" · "+prints+"ª foto";busy=false}},90)}
+$("print").addEventListener("click",runPrint);$("gift").addEventListener("click",()=>{index=(index+1)%users.length;showUser();$("progressText").textContent="PRESENTE RECEBIDO · ROSA";$("fill").style.width="18%";$("percent").textContent="18%";runPrint()});$("next").addEventListener("click",()=>{index=(index+1)%users.length;showUser();$("fill").style.width="0%";$("percent").textContent="0%";$("progressText").textContent="AGUARDANDO IMPRESSÃO"});showUser();
+</script></body></html>
